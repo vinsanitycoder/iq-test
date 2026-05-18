@@ -11,8 +11,8 @@ export default function HRNav() {
     function fetchName() {
       fetch('/api/settings')
         .then(r => r.json())
-        .then(({ settings }) => {
-          if (settings?.company_name) setCompanyName(settings.company_name)
+        .then(data => {
+          if (data?.company_name) setCompanyName(data.company_name)
         })
         .catch(() => {})
     }
