@@ -10,14 +10,20 @@ export default function RowDeleteButton({ applicantId, applicantName }: { applic
 
   async function handleDelete() {
     setDeleting(true)
-    const res = await fetch('/api/hr/delete', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ applicantId }),
-    })
-    if (res.ok) {
-      router.refresh()
-    } else {
+    try {
+      const res = await fetch('/api/hr/delete', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ applicantId }),
+      })
+      if (res.ok) {
+        setConfirming(false)
+        router.refresh()
+      } else {
+        setDeleting(false)
+        setConfirming(false)
+      }
+    } catch {
       setDeleting(false)
       setConfirming(false)
     }
