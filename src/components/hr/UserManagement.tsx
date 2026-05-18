@@ -28,6 +28,9 @@ export default function UserManagement() {
   const [deleteTarget, setDeleteTarget] = useState<HRUser | null>(null)
   const [deleting, setDeleting] = useState(false)
 
+  const [resettingId, setResettingId] = useState<string | null>(null)
+  const [resetPasswords, setResetPasswords] = useState<Record<string, string>>({})
+
   const [roleMsg, setRoleMsg] = useState<string | null>(null)
 
   useEffect(() => {
@@ -79,6 +82,28 @@ export default function UserManagement() {
       setCreateMsg({ ok: false, text: 'Network error. Please try again.' })
     } finally {
       setCreating(false)
+    }
+  }
+
+  async function handleResetPassword(user: HRUser) {
+    setResettingId(user.id)
+    setResetPasswords(p => { const n = { ...p }; delete n[user.id]; return n })
+    try {
+      const res = await fetch('/api/hr/admin/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id }),
+      })
+      const json = await res.json()
+      if (res.ok) {
+        setResetPasswords(p => ({ ...p, [user.id]: json.password }))
+      } else {
+        setRoleMsg(json.error ?? 'Could not reset password.')
+      }
+    } catch {
+      setRoleMsg('Network error. Please try again.')
+    } finally {
+      setResettingId(null)
     }
   }
 
@@ -134,7 +159,8 @@ export default function UserManagement() {
         ) : (
           <div className="divide-y divide-gray-100">
             {users.map(user => (
-              <div key={user.id} className="flex items-center gap-3 py-3">
+              <div key={user.id}>
+              <div className="flex items-center gap-3 py-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-sm font-semibold text-fynlo-dark truncate">{user.email}</span>
@@ -152,6 +178,13 @@ export default function UserManagement() {
 
                 <div className="flex items-center gap-2 shrink-0">
                   <button
+                    onClick={() => handleResetPassword(user)}
+                    disabled={resettingId === user.id}
+                    className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-200 text-fynlo-body hover:bg-gray-50 transition-colors disabled:opacity-50"
+                  >
+                    {resettingId === user.id ? 'Resetting…' : 'Reset password'}
+                  </button>
+                  <button
                     onClick={() => handleRoleToggle(user)}
                     className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-200 text-fynlo-body hover:bg-gray-50 transition-colors"
                   >
@@ -168,6 +201,24 @@ export default function UserManagement() {
                     </svg>
                   </button>
                 </div>
+              </div>
+
+              {resetPasswords[user.id] && (
+                <div className="mb-2 p-3 bg-teal-50 border border-teal-200 rounded-xl">
+                  <p className="text-xs font-semibold text-teal-800 mb-1">Password reset — share this with {user.email.split('@')[0]}</p>
+                  <div className="flex items-center gap-3 bg-white border border-teal-200 rounded-lg px-3 py-2">
+                    <span className="font-mono text-sm font-bold text-fynlo-dark tracking-wide flex-1">
+                      {resetPasswords[user.id]}
+                    </span>
+                    <button
+                      onClick={() => navigator.clipboard.writeText(resetPasswords[user.id])}
+                      className="text-xs font-semibold text-fynlo-teal hover:text-fynlo-dark transition-colors shrink-0"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                </div>
+              )}
               </div>
             ))}
           </div>
