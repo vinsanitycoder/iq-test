@@ -59,7 +59,7 @@ export default function DashboardTable() {
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch('/api/hr/results')
+      const res = await fetch('/api/hr/results', { cache: 'no-store' })
       const json = await res.json()
       setResults(json.results ?? [])
     } catch {

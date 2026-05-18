@@ -56,7 +56,7 @@ export default function SettingsPage() {
   const logoInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    fetch('/api/hr/settings')
+    fetch('/api/hr/settings', { cache: 'no-store' })
       .then(r => r.json())
       .then(({ settings }) => {
         if (settings) {

@@ -12,7 +12,9 @@ export async function GET() {
   if (error && error.code !== 'PGRST116') {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
-  return NextResponse.json({ settings: data ?? null })
+  return NextResponse.json({ settings: data ?? null }, {
+    headers: { 'Cache-Control': 'no-store' },
+  })
 }
 
 export async function POST(req: NextRequest) {
