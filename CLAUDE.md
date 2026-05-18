@@ -304,7 +304,7 @@ Completion Screen
 - [x] Phase 7: Scoring Engine
 - [x] Phase 8: HR Dashboard
 - [x] Phase 9: Testing & QA
-- [ ] Phase 10: Deployment
+- [x] Phase 10: Deployment
 
 Update the checklist above when each phase is complete.
 
