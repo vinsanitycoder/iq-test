@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 const STATUS_LABELS: Record<string, string> = {
   pending_review: 'Pending',
@@ -28,6 +28,8 @@ export default function StatusDropdown({ resultId, currentStatus, compact, onUpd
   const router = useRouter()
   const [status, setStatus] = useState(currentStatus)
   const [saving, setSaving] = useState(false)
+
+  useEffect(() => { setStatus(currentStatus) }, [currentStatus])
 
   async function handleChange(next: string) {
     if (next === status || saving) return
