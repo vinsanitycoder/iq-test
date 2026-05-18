@@ -38,8 +38,8 @@ export default function HRLoginPage() {
     <div className="min-h-screen bg-fynlo-bg flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="text-fynlo-teal font-black text-3xl tracking-tight mb-1">Fynlo</div>
-          <div className="text-fynlo-subtle text-sm">HR Portal</div>
+          <div className="text-fynlo-teal font-black text-3xl tracking-tight mb-1">HR Portal</div>
+          <div className="text-fynlo-subtle text-sm">Sign in to your dashboard</div>
         </div>
 
         <div className="bg-white rounded-card shadow-card p-8">

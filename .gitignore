@@ -29,3 +29,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# internal dev docs — keep locally, not in public repo
+CLAUDE.md
+SESSION_HANDOFF.md
