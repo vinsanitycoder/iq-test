@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Nunito } from 'next/font/google'
+import { createAdminClient } from '@/lib/supabase/admin'
 import './globals.css'
 
 const nunito = Nunito({
@@ -8,9 +9,24 @@ const nunito = Nunito({
   variable: '--font-nunito',
 })
 
-export const metadata: Metadata = {
-  title: 'Applicant Logical Test',
-  description: 'Cognitive aptitude assessment',
+export async function generateMetadata(): Promise<Metadata> {
+  const supabase = createAdminClient()
+  const { data } = await supabase
+    .from('settings')
+    .select('company_name, company_logo_url')
+    .single()
+
+  const title = data?.company_name
+    ? `${data.company_name} — Applicant Test`
+    : 'Applicant Logical Test'
+
+  return {
+    title,
+    description: 'Cognitive aptitude assessment',
+    icons: data?.company_logo_url
+      ? { icon: data.company_logo_url }
+      : undefined,
+  }
 }
 
 export default function RootLayout({
