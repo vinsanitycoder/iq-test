@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     }
 
     const elapsed = Math.floor(
-      (Date.now() - new Date(session.start_time).getTime()) / 1000
+      (Date.now() - new Date(session.start_time!).getTime()) / 1000
     )
     const secondsRemaining = Math.max(0, TEST_DURATION - elapsed)
 
