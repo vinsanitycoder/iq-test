@@ -52,6 +52,7 @@ export default function SettingsPage() {
   const [saveMsg, setSaveMsg] = useState<{ ok: boolean; text: string } | null>(null)
   const [logoLoading, setLogoLoading] = useState(false)
   const [logoMsg, setLogoMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  const [removingLogo, setRemovingLogo] = useState(false)
   const logoInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -102,6 +103,25 @@ export default function SettingsPage() {
       setSaveMsg({ ok: false, text: 'Network error. Please try again.' })
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function handleRemoveLogo() {
+    setRemovingLogo(true)
+    setLogoMsg(null)
+    try {
+      const res = await fetch('/api/hr/settings/logo', { method: 'DELETE' })
+      const json = await res.json()
+      if (!res.ok) {
+        setLogoMsg({ ok: false, text: json.error ?? 'Could not remove logo.' })
+      } else {
+        setLogoUrl(null)
+        setLogoMsg({ ok: true, text: 'Logo removed.' })
+      }
+    } catch {
+      setLogoMsg({ ok: false, text: 'Network error. Please try again.' })
+    } finally {
+      setRemovingLogo(false)
     }
   }
 
@@ -171,8 +191,16 @@ export default function SettingsPage() {
               <img
                 src={logoUrl}
                 alt="Company logo"
-                className="h-16 w-auto object-contain rounded-lg border border-gray-100"
+                className="h-16 w-auto object-contain rounded-lg border border-gray-100 mb-3"
               />
+              <button
+                type="button"
+                onClick={handleRemoveLogo}
+                disabled={removingLogo}
+                className="text-xs text-red-500 hover:text-red-700 font-semibold transition-colors disabled:opacity-50"
+              >
+                {removingLogo ? 'Removing…' : 'Remove logo'}
+              </button>
             </div>
           )}
 

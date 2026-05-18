@@ -55,3 +55,25 @@ export async function POST(req: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ url: publicUrl })
 }
+
+export async function DELETE(req: NextRequest) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const admin = createAdminClient()
+
+  // Remove all logo files from storage
+  const { data: files } = await admin.storage.from(BUCKET).list()
+  if (files && files.length > 0) {
+    await admin.storage.from(BUCKET).remove(files.map(f => f.name))
+  }
+
+  // Clear the URL in settings
+  const { data: existing } = await admin.from('settings').select('id').single()
+  if (existing?.id) {
+    await admin.from('settings').update({ company_logo_url: null, updated_at: new Date().toISOString() }).eq('id', existing.id)
+  }
+
+  return NextResponse.json({ ok: true })
+}
