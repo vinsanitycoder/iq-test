@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Design Directions — Fynlo Colors</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    * { font-family: 'Nunito', sans-serif; }
+    body { background: #E8E8E4; }
+
+    /* ── Fynlo Brand Colors ── */
+    /* Primary Teal  : #0084AD */
+    /* Terracotta    : #BC3F1D */
+    /* Lime Green    : #D4FF98 */
+    /* Dark Teal     : #003B4C */
+
+    .phone-frame {
+      width: 375px;
+      min-height: 680px;
+      border-radius: 40px;
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.18), 0 0 0 8px #1a1a1a, 0 0 0 10px #333;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    /* ── VARIATION 1: Teal-Led ── */
+    .v1 { background: #F7F7F3; }
+    .v1-header { background: #0084AD; }
+    .v1-card { background: white; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,132,173,0.10); }
+    .v1-tag { background: #D4FF98; color: #003B4C; border-radius: 999px; font-size: 12px; font-weight: 800; padding: 4px 14px; display: inline-block; }
+    .v1-btn { background: #BC3F1D; color: white; border-radius: 14px; font-weight: 800; padding: 16px 32px; font-size: 16px; width: 100%; text-align: center; letter-spacing: 0.01em; }
+    .v1-stat-primary { color: #0084AD; }
+    .v1-stat-accent { color: #BC3F1D; }
+    .v1-heading { color: #003B4C; }
+    .v1-body { color: #4A6572; }
+    .v1-subtle { color: #8A9DA6; }
+
+    /* ── VARIATION 2: Dark-Led ── */
+    .v2 { background: #F7F6F2; }
+    .v2-header { background: #003B4C; }
+    .v2-card { background: white; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,59,76,0.08); }
+    .v2-tag { background: #D4FF98; color: #003B4C; border-radius: 999px; font-size: 12px; font-weight: 800; padding: 4px 14px; display: inline-block; }
+    .v2-btn { background: #0084AD; color: white; border-radius: 14px; font-weight: 800; padding: 16px 32px; font-size: 16px; width: 100%; text-align: center; letter-spacing: 0.01em; }
+    .v2-stat-primary { color: #003B4C; }
+    .v2-stat-accent { color: #BC3F1D; }
+    .v2-heading { color: #003B4C; }
+    .v2-body { color: #4A6572; }
+    .v2-subtle { color: #8A9DA6; }
+
+    /* ── VARIATION 3: Warm Terracotta-Led ── */
+    .v3 { background: #F8F5F2; }
+    .v3-header { background: #BC3F1D; }
+    .v3-card { background: white; border-radius: 20px; box-shadow: 0 4px 20px rgba(188,63,29,0.08); }
+    .v3-tag { background: #D4FF98; color: #003B4C; border-radius: 999px; font-size: 12px; font-weight: 800; padding: 4px 14px; display: inline-block; }
+    .v3-btn { background: #003B4C; color: white; border-radius: 14px; font-weight: 800; padding: 16px 32px; font-size: 16px; width: 100%; text-align: center; letter-spacing: 0.01em; }
+    .v3-stat-primary { color: #BC3F1D; }
+    .v3-stat-accent { color: #0084AD; }
+    .v3-heading { color: #003B4C; }
+    .v3-body { color: #4A6572; }
+    .v3-subtle { color: #8A9DA6; }
+  </style>
+</head>
+<body class="py-14 px-6">
+
+  <div class="max-w-5xl mx-auto">
+
+    <!-- Header -->
+    <div class="text-center mb-4">
+      <p class="text-xs uppercase tracking-widest text-gray-400 font-bold mb-1">Warm Minimal · Fynlo Brand Colors · Welcome Screen</p>
+      <h1 class="text-2xl font-extrabold text-gray-700">Three ways to apply the palette</h1>
+    </div>
+
+    <!-- Color Swatch Row -->
+    <div class="flex justify-center gap-3 mb-12">
+      <div class="flex items-center gap-2"><div class="w-6 h-6 rounded-full border border-white shadow" style="background:#0084AD"></div><span class="text-xs text-gray-500 font-bold">#0084AD Teal</span></div>
+      <div class="flex items-center gap-2"><div class="w-6 h-6 rounded-full border border-white shadow" style="background:#BC3F1D"></div><span class="text-xs text-gray-500 font-bold">#BC3F1D Terracotta</span></div>
+      <div class="flex items-center gap-2"><div class="w-6 h-6 rounded-full border border-white shadow" style="background:#D4FF98"></div><span class="text-xs text-gray-500 font-bold">#D4FF98 Lime</span></div>
+      <div class="flex items-center gap-2"><div class="w-6 h-6 rounded-full border border-white shadow" style="background:#003B4C"></div><span class="text-xs text-gray-500 font-bold">#003B4C Dark</span></div>
+    </div>
+
+    <!-- Three phone mockups -->
+    <div class="flex gap-10 justify-center items-start flex-wrap">
+
+      <!-- ── VARIATION 1: Teal-Led ── -->
+      <div class="flex flex-col items-center gap-4">
+        <span class="text-xs font-extrabold uppercase tracking-widest text-gray-500 bg-white px-3 py-1 rounded-full shadow-sm">A · Teal-Led</span>
+        <div class="phone-frame">
+          <div class="v1 h-full flex flex-col">
+
+            <!-- Header band with logo -->
+            <div class="v1-header px-6 pt-10 pb-8">
+              <div class="flex items-center gap-3">
+                <!-- Fynlo logo mark (simplified) -->
+                <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                  <rect width="36" height="36" rx="10" fill="white" fill-opacity="0.15"/>
+                  <path d="M10 12C10 10.9 10.9 10 12 10H16C17.1 10 18 10.9 18 12V16C18 17.1 17.1 18 16 18H12C10.9 18 10 17.1 10 16V12Z" fill="white"/>
+                  <path d="M20 12C20 10.9 20.9 10 22 10H24C25.1 10 26 10.9 26 12V14C26 15.1 25.1 16 24 16H22C20.9 16 20 15.1 20 14V12Z" fill="white" fill-opacity="0.6"/>
+                  <path d="M10 20C10 18.9 10.9 18 12 18H14C15.1 18 16 18.9 16 20V24C16 25.1 15.1 26 14 26H12C10.9 26 10 25.1 10 24V20Z" fill="white" fill-opacity="0.6"/>
+                  <path d="M20 20C20 18.9 20.9 18 22 18H24C25.1 18 26 18.9 26 20V24C26 25.1 25.1 26 24 26H22C20.9 26 20 25.1 20 24V20Z" fill="white" fill-opacity="0.35"/>
+                </svg>
+                <div>
+                  <div class="text-white font-extrabold text-base leading-none">Fynlo Ltd</div>
+                  <div class="text-white text-xs opacity-70 mt-0.5">Applicant Assessment</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Content -->
+            <div class="px-5 flex-1 flex flex-col -mt-4">
+              <div class="v1-card p-5 flex-1 flex flex-col">
+
+                <div class="mb-3"><span class="v1-tag">Logical Reasoning Test</span></div>
+
+                <h2 class="v1-heading font-extrabold text-xl leading-snug mt-2 mb-3">
+                  Welcome — let's see how you think
+                </h2>
+                <p class="v1-body text-sm leading-relaxed mb-5">
+                  This short assessment helps us understand how you approach problems. No trick questions — just be yourself.
+                </p>
+
+                <!-- Stats -->
+                <div class="flex gap-3 mb-6">
+                  <div class="flex-1 bg-gray-50 rounded-xl p-3 text-center">
+                    <div class="v1-stat-primary font-extrabold text-2xl leading-none">40</div>
+                    <div class="v1-subtle text-xs mt-1">questions</div>
+                  </div>
+                  <div class="flex-1 bg-gray-50 rounded-xl p-3 text-center">
+                    <div class="v1-stat-primary font-extrabold text-2xl leading-none">25</div>
+                    <div class="v1-subtle text-xs mt-1">minutes</div>
+                  </div>
+                  <div class="flex-1 bg-gray-50 rounded-xl p-3 text-center">
+                    <div class="v1-stat-accent font-extrabold text-2xl leading-none">4</div>
+                    <div class="v1-subtle text-xs mt-1">types</div>
+                  </div>
+                </div>
+
+                <div class="mt-auto space-y-3">
+                  <div class="v1-btn">Start Assessment →</div>
+                  <p class="v1-subtle text-xs text-center">Your details are kept private and used only for this application.</p>
+                </div>
+              </div>
+            </div>
+            <div class="pb-6"></div>
+
+          </div>
+        </div>
+        <p class="text-xs text-gray-400 text-center">Teal header · Terracotta CTA<br>Lime tags · Dark text</p>
+      </div>
+
+      <!-- ── VARIATION 2: Dark-Led ── -->
+      <div class="flex flex-col items-center gap-4">
+        <span class="text-xs font-extrabold uppercase tracking-widest text-gray-500 bg-white px-3 py-1 rounded-full shadow-sm">B · Dark-Led</span>
+        <div class="phone-frame">
+          <div class="v2 h-full flex flex-col">
+
+            <!-- Header band with logo -->
+            <div class="v2-header px-6 pt-10 pb-8">
+              <div class="flex items-center gap-3">
+                <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                  <rect width="36" height="36" rx="10" fill="white" fill-opacity="0.15"/>
+                  <path d="M10 12C10 10.9 10.9 10 12 10H16C17.1 10 18 10.9 18 12V16C18 17.1 17.1 18 16 18H12C10.9 18 10 17.1 10 16V12Z" fill="white"/>
+                  <path d="M20 12C20 10.9 20.9 10 22 10H24C25.1 10 26 10.9 26 12V14C26 15.1 25.1 16 24 16H22C20.9 16 20 15.1 20 14V12Z" fill="white" fill-opacity="0.6"/>
+                  <path d="M10 20C10 18.9 10.9 18 12 18H14C15.1 18 16 18.9 16 20V24C16 25.1 15.1 26 14 26H12C10.9 26 10 25.1 10 24V20Z" fill="white" fill-opacity="0.6"/>
+                  <path d="M20 20C20 18.9 20.9 18 22 18H24C25.1 18 26 18.9 26 20V24C26 25.1 25.1 26 24 26H22C20.9 26 20 25.1 20 24V20Z" fill="white" fill-opacity="0.35"/>
+                </svg>
+                <div>
+                  <div class="text-white font-extrabold text-base leading-none">Fynlo Ltd</div>
+                  <div class="text-white text-xs opacity-70 mt-0.5">Applicant Assessment</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Content -->
+            <div class="px-5 flex-1 flex flex-col -mt-4">
+              <div class="v2-card p-5 flex-1 flex flex-col">
+
+                <div class="mb-3"><span class="v2-tag">Logical Reasoning Test</span></div>
+
+                <h2 class="v2-heading font-extrabold text-xl leading-snug mt-2 mb-3">
+                  Welcome — let's see how you think
+                </h2>
+                <p class="v2-body text-sm leading-relaxed mb-5">
+                  This short assessment helps us understand how you approach problems. No trick questions — just be yourself.
+                </p>
+
+                <!-- Stats -->
+                <div class="flex gap-3 mb-6">
+                  <div class="flex-1 bg-gray-50 rounded-xl p-3 text-center">
+                    <div class="v2-stat-primary font-extrabold text-2xl leading-none">40</div>
+                    <div class="v2-subtle text-xs mt-1">questions</div>
+                  </div>
+                  <div class="flex-1 bg-gray-50 rounded-xl p-3 text-center">
+                    <div class="v2-stat-primary font-extrabold text-2xl leading-none">25</div>
+                    <div class="v2-subtle text-xs mt-1">minutes</div>
+                  </div>
+                  <div class="flex-1 bg-gray-50 rounded-xl p-3 text-center">
+                    <div class="v2-stat-accent font-extrabold text-2xl leading-none">4</div>
+                    <div class="v2-subtle text-xs mt-1">types</div>
+                  </div>
+                </div>
+
+                <div class="mt-auto space-y-3">
+                  <div class="v2-btn">Start Assessment →</div>
+                  <p class="v2-subtle text-xs text-center">Your details are kept private and used only for this application.</p>
+                </div>
+              </div>
+            </div>
+            <div class="pb-6"></div>
+
+          </div>
+        </div>
+        <p class="text-xs text-gray-400 text-center">Dark header · Teal CTA<br>Lime tags · Terracotta accent</p>
+      </div>
+
+      <!-- ── VARIATION 3: Terracotta-Led ── -->
+      <div class="flex flex-col items-center gap-4">
+        <span class="text-xs font-extrabold uppercase tracking-widest text-gray-500 bg-white px-3 py-1 rounded-full shadow-sm">C · Terracotta-Led</span>
+        <div class="phone-frame">
+          <div class="v3 h-full flex flex-col">
+
+            <!-- Header band with logo -->
+            <div class="v3-header px-6 pt-10 pb-8">
+              <div class="flex items-center gap-3">
+                <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                  <rect width="36" height="36" rx="10" fill="white" fill-opacity="0.15"/>
+                  <path d="M10 12C10 10.9 10.9 10 12 10H16C17.1 10 18 10.9 18 12V16C18 17.1 17.1 18 16 18H12C10.9 18 10 17.1 10 16V12Z" fill="white"/>
+                  <path d="M20 12C20 10.9 20.9 10 22 10H24C25.1 10 26 10.9 26 12V14C26 15.1 25.1 16 24 16H22C20.9 16 20 15.1 20 14V12Z" fill="white" fill-opacity="0.6"/>
+                  <path d="M10 20C10 18.9 10.9 18 12 18H14C15.1 18 16 18.9 16 20V24C16 25.1 15.1 26 14 26H12C10.9 26 10 25.1 10 24V20Z" fill="white" fill-opacity="0.6"/>
+                  <path d="M20 20C20 18.9 20.9 18 22 18H24C25.1 18 26 18.9 26 20V24C26 25.1 25.1 26 24 26H22C20.9 26 20 25.1 20 24V20Z" fill="white" fill-opacity="0.35"/>
+                </svg>
+                <div>
+                  <div class="text-white font-extrabold text-base leading-none">Fynlo Ltd</div>
+                  <div class="text-white text-xs opacity-70 mt-0.5">Applicant Assessment</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Content -->
+            <div class="px-5 flex-1 flex flex-col -mt-4">
+              <div class="v3-card p-5 flex-1 flex flex-col">
+
+                <div class="mb-3"><span class="v3-tag">Logical Reasoning Test</span></div>
+
+                <h2 class="v3-heading font-extrabold text-xl leading-snug mt-2 mb-3">
+                  Welcome — let's see how you think
+                </h2>
+                <p class="v3-body text-sm leading-relaxed mb-5">
+                  This short assessment helps us understand how you approach problems. No trick questions — just be yourself.
+                </p>
+
+                <!-- Stats -->
+                <div class="flex gap-3 mb-6">
+                  <div class="flex-1 bg-gray-50 rounded-xl p-3 text-center">
+                    <div class="v3-stat-primary font-extrabold text-2xl leading-none">40</div>
+                    <div class="v3-subtle text-xs mt-1">questions</div>
+                  </div>
+                  <div class="flex-1 bg-gray-50 rounded-xl p-3 text-center">
+                    <div class="v3-stat-primary font-extrabold text-2xl leading-none">25</div>
+                    <div class="v3-subtle text-xs mt-1">minutes</div>
+                  </div>
+                  <div class="flex-1 bg-gray-50 rounded-xl p-3 text-center">
+                    <div class="v3-stat-accent font-extrabold text-2xl leading-none">4</div>
+                    <div class="v3-subtle text-xs mt-1">types</div>
+                  </div>
+                </div>
+
+                <div class="mt-auto space-y-3">
+                  <div class="v3-btn">Start Assessment →</div>
+                  <p class="v3-subtle text-xs text-center">Your details are kept private and used only for this application.</p>
+                </div>
+              </div>
+            </div>
+            <div class="pb-6"></div>
+
+          </div>
+        </div>
+        <p class="text-xs text-gray-400 text-center">Terracotta header · Dark CTA<br>Lime tags · Teal accent</p>
+      </div>
+
+    </div>
+
+    <!-- Footer note -->
+    <p class="text-center text-xs text-gray-400 mt-12">All three use the same Warm Minimal layout · Nunito font · Fynlo brand colors · Company logo is a placeholder</p>
+
+  </div>
+</body>
+</html>
