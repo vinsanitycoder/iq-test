@@ -8,12 +8,18 @@ export default function HRNav() {
   const [companyName, setCompanyName] = useState('Fynlo')
 
   useEffect(() => {
-    fetch('/api/settings')
-      .then(r => r.json())
-      .then(({ settings }) => {
-        if (settings?.company_name) setCompanyName(settings.company_name)
-      })
-      .catch(() => {})
+    function fetchName() {
+      fetch('/api/settings')
+        .then(r => r.json())
+        .then(({ settings }) => {
+          if (settings?.company_name) setCompanyName(settings.company_name)
+        })
+        .catch(() => {})
+    }
+
+    fetchName()
+    window.addEventListener('settings-updated', fetchName)
+    return () => window.removeEventListener('settings-updated', fetchName)
   }, [])
 
   return (

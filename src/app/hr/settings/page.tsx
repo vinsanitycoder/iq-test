@@ -98,6 +98,7 @@ export default function SettingsPage() {
         setSaveMsg({ ok: false, text: json.error ?? 'Something went wrong.' })
       } else {
         setSaveMsg({ ok: true, text: 'Settings saved.' })
+        window.dispatchEvent(new CustomEvent('settings-updated'))
       }
     } catch {
       setSaveMsg({ ok: false, text: 'Network error. Please try again.' })
