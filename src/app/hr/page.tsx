@@ -1,6 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import HRNav from '@/components/hr/HRNav'
 import StatusDropdown from '@/components/hr/StatusDropdown'
+import RowDeleteButton from '@/components/hr/RowDeleteButton'
 import Link from 'next/link'
 
 type DashboardRow = {
@@ -135,6 +136,7 @@ export default async function HRDashboardPage() {
                         <th className="text-left px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide">
                           Status
                         </th>
+                        <th className="px-4 py-3" />
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50">
@@ -184,6 +186,12 @@ export default async function HRDashboardPage() {
                                 resultId={row.id}
                                 currentStatus={row.status}
                                 compact
+                              />
+                            </td>
+                            <td className="px-4 py-3">
+                              <RowDeleteButton
+                                applicantId={row.applicants?.id ?? ''}
+                                applicantName={name}
                               />
                             </td>
                           </tr>
