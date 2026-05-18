@@ -6,6 +6,30 @@ No per-seat fees. No third-party test provider. Fully hosted on your own account
 
 ---
 
+## Deploy with Claude AI
+
+The fastest way to get this running is to let Claude walk you through it. Copy the prompt below and paste it into [Claude](https://claude.ai) — it will guide you through every step interactively, answer your questions, and help you fix anything that goes wrong.
+
+```
+I want to deploy an open-source applicant testing platform called Applicant Logical Test from this GitHub repo: https://github.com/vinsanitycoder/iq-test
+
+It is a web app built with Next.js, Supabase, and Vercel — all free. I have no coding experience.
+
+Please guide me step by step through the full setup:
+1. Forking the GitHub repo to my own account
+2. Creating a free Supabase project and running the 3 SQL setup files in order (01_schema.sql, 02_rls.sql, 03_questions.sql)
+3. Creating a public storage bucket called "logos" in Supabase
+4. Creating my HR login account in Supabase Authentication and making it an admin
+5. Deploying to Vercel by importing my forked repo and adding the 3 environment variables (NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY)
+6. Testing that the app works
+
+After setup, also show me how to customise the company name, logo, and test text from the Settings page — no code needed.
+
+Please go one step at a time, wait for me to confirm each step is done before moving to the next, and help me if anything goes wrong.
+```
+
+---
+
 ## Screenshots
 
 **Applicant flow**
