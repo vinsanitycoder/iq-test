@@ -1,50 +1,5 @@
-import { createAdminClient } from '@/lib/supabase/admin'
 import HRNav from '@/components/hr/HRNav'
-import StatusDropdown from '@/components/hr/StatusDropdown'
-import RowDeleteButton from '@/components/hr/RowDeleteButton'
-import Link from 'next/link'
-
-export const dynamic = 'force-dynamic'
-
-type DashboardRow = {
-  id: string
-  iq_score: number
-  iq_label: string
-  percentile: number
-  status: string
-  created_at: string
-  applicants: {
-    id: string
-    first_name: string
-    last_name: string
-    email: string
-  } | null
-  test_sessions: {
-    time_taken_seconds: number | null
-    tab_switches: number
-  } | null
-}
-
-function formatTime(seconds: number | null): string {
-  if (seconds == null) return '—'
-  const m = Math.floor(seconds / 60)
-  const s = seconds % 60
-  return `${m}:${String(s).padStart(2, '0')}`
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
-}
-
-function ordinal(n: number): string {
-  const s = ['th', 'st', 'nd', 'rd']
-  const v = n % 100
-  return n + (s[(v - 20) % 10] ?? s[v] ?? s[0])
-}
+import DashboardTable from '@/components/hr/DashboardTable'
 
 const IQ_LABEL_STYLES: Record<string, string> = {
   'Superior':      'bg-purple-100 text-purple-800',
@@ -64,20 +19,7 @@ const IQ_REFERENCE = [
   { range: 'Below 70',label: 'Below Average', percentile: 'Bottom range' },
 ]
 
-export default async function HRDashboardPage() {
-  const supabase = createAdminClient()
-
-  const { data, error } = await supabase
-    .from('results')
-    .select(`
-      id, iq_score, iq_label, percentile, status, created_at,
-      applicants (id, first_name, last_name, email),
-      test_sessions (time_taken_seconds, tab_switches)
-    `)
-    .order('created_at', { ascending: false })
-
-  const results = (data ?? []) as unknown as DashboardRow[]
-
+export default function HRDashboardPage() {
   return (
     <>
       <HRNav />
@@ -86,10 +28,6 @@ export default async function HRDashboardPage() {
         <div className="mb-6 flex items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl font-black text-fynlo-dark">Applicants</h1>
-            <p className="text-fynlo-subtle text-sm mt-1">
-              {results.length} {results.length === 1 ? 'submission' : 'submissions'}
-              {error && ' — error loading results'}
-            </p>
           </div>
           <a
             href="/api/hr/export"
@@ -105,105 +43,8 @@ export default async function HRDashboardPage() {
         </div>
 
         <div className="flex flex-col lg:flex-row gap-6">
-          {/* Main table */}
           <div className="flex-1 min-w-0">
-            {results.length === 0 ? (
-              <div className="bg-white rounded-card shadow-card px-8 py-16 text-center">
-                <p className="text-fynlo-subtle text-sm">No submissions yet.</p>
-              </div>
-            ) : (
-              <div className="bg-white rounded-card shadow-card overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-gray-100">
-                        <th className="text-left px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide w-full">
-                          Applicant
-                        </th>
-                        <th className="text-center px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide">
-                          IQ
-                        </th>
-                        <th className="text-left px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide hidden sm:table-cell">
-                          Label
-                        </th>
-                        <th className="text-center px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide hidden md:table-cell">
-                          Percentile
-                        </th>
-                        <th className="text-center px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide hidden lg:table-cell">
-                          Time
-                        </th>
-                        <th className="text-left px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide hidden md:table-cell">
-                          Date
-                        </th>
-                        <th className="text-left px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide">
-                          Status
-                        </th>
-                        <th className="px-4 py-3" />
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50">
-                      {results.map(row => {
-                        const applicant = row.applicants
-                        const session = row.test_sessions
-                        const name = applicant
-                          ? `${applicant.first_name} ${applicant.last_name}`
-                          : 'Unknown'
-                        const email = applicant?.email ?? '—'
-                        const labelStyle = IQ_LABEL_STYLES[row.iq_label] ?? 'bg-gray-100 text-gray-700'
-
-                        return (
-                          <tr
-                            key={row.id}
-                            className="hover:bg-fynlo-bg/60 transition-colors"
-                          >
-                            <td className="px-4 py-3 max-w-0 w-full">
-                              <Link href={`/hr/applicant/${row.id}`} className="group">
-                                <div className="font-semibold text-fynlo-dark group-hover:text-fynlo-teal transition-colors truncate">
-                                  {name}
-                                </div>
-                                <div className="text-fynlo-subtle text-xs mt-0.5 truncate">{email}</div>
-                              </Link>
-                            </td>
-                            <td className="px-4 py-3 text-center">
-                              <span className="font-black text-fynlo-dark text-base">
-                                {row.iq_score}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3 hidden sm:table-cell">
-                              <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${labelStyle}`}>
-                                {row.iq_label}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3 text-center text-fynlo-body hidden md:table-cell">
-                              {ordinal(row.percentile)}
-                            </td>
-                            <td className="px-4 py-3 text-center text-fynlo-body hidden lg:table-cell">
-                              {formatTime(session?.time_taken_seconds ?? null)}
-                            </td>
-                            <td className="px-4 py-3 text-fynlo-subtle hidden md:table-cell">
-                              {formatDate(row.created_at)}
-                            </td>
-                            <td className="px-4 py-3">
-                              <StatusDropdown
-                                resultId={row.id}
-                                currentStatus={row.status}
-                                compact
-                              />
-                            </td>
-                            <td className="px-4 py-3">
-                              <RowDeleteButton
-                                applicantId={row.applicants?.id ?? ''}
-                                applicantName={name}
-                              />
-                            </td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
+            <DashboardTable />
           </div>
 
           {/* Score reference panel */}

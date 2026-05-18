@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
-export default function RowDeleteButton({ applicantId, applicantName }: { applicantId: string; applicantName: string }) {
+export default function RowDeleteButton({ applicantId, applicantName, onDelete }: { applicantId: string; applicantName: string; onDelete?: () => void }) {
   const router = useRouter()
   const [confirming, setConfirming] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -18,7 +18,8 @@ export default function RowDeleteButton({ applicantId, applicantName }: { applic
       })
       if (res.ok) {
         setConfirming(false)
-        router.refresh()
+        if (onDelete) onDelete()
+        else router.refresh()
       } else {
         setDeleting(false)
         setConfirming(false)

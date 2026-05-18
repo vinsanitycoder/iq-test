@@ -21,9 +21,10 @@ type Props = {
   resultId: string
   currentStatus: string
   compact?: boolean
+  onUpdate?: () => void
 }
 
-export default function StatusDropdown({ resultId, currentStatus, compact }: Props) {
+export default function StatusDropdown({ resultId, currentStatus, compact, onUpdate }: Props) {
   const router = useRouter()
   const [status, setStatus] = useState(currentStatus)
   const [saving, setSaving] = useState(false)
@@ -42,6 +43,8 @@ export default function StatusDropdown({ resultId, currentStatus, compact }: Pro
 
     if (!res.ok) {
       setStatus(prev) // roll back
+    } else if (onUpdate) {
+      onUpdate()
     } else {
       router.refresh()
     }
