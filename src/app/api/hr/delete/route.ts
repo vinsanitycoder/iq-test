@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 
@@ -28,5 +29,6 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
+  revalidatePath('/hr')
   return NextResponse.json({ ok: true })
 }

@@ -4,6 +4,8 @@ import StatusDropdown from '@/components/hr/StatusDropdown'
 import RowDeleteButton from '@/components/hr/RowDeleteButton'
 import Link from 'next/link'
 
+export const dynamic = 'force-dynamic'
+
 type DashboardRow = {
   id: string
   iq_score: number
