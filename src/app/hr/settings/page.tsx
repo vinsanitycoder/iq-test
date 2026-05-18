@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import HRNav from '@/components/hr/HRNav'
+import UserManagement from '@/components/hr/UserManagement'
 import Link from 'next/link'
 
 const LIMITS = {
@@ -480,6 +481,8 @@ export default function SettingsPage() {
             </p>
           )}
         </form>
+
+        <UserManagement />
 
         <div className="h-8" />
       </div>
