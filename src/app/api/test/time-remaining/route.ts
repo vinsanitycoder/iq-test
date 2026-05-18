@@ -32,7 +32,9 @@ export async function GET(request: NextRequest) {
     )
     const secondsRemaining = Math.max(0, TEST_DURATION - elapsed)
 
-    return NextResponse.json({ secondsRemaining, status: session.status })
+    return NextResponse.json({ secondsRemaining, status: session.status }, {
+      headers: { 'Cache-Control': 'no-store' },
+    })
   } catch (err) {
     console.error('Time remaining error:', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

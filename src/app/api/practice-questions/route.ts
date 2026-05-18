@@ -25,5 +25,7 @@ export async function GET() {
   // Cast to strip the inferred type — correct_answer was never selected
   const questions = (data ?? []) as QuestionForClient[]
 
-  return NextResponse.json({ questions })
+  return NextResponse.json({ questions }, {
+    headers: { 'Cache-Control': 'no-store' },
+  })
 }

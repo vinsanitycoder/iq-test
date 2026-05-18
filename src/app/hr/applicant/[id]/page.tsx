@@ -5,6 +5,8 @@ import DeleteButton from '@/components/hr/DeleteButton'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
+export const dynamic = 'force-dynamic'
+
 type DetailResult = {
   id: string
   raw_score: number

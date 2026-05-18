@@ -12,5 +12,7 @@ export async function GET() {
   return NextResponse.json({
     company_name: settings?.company_name ?? 'Fynlo',
     company_logo_url: settings?.company_logo_url ?? null,
+  }, {
+    headers: { 'Cache-Control': 'no-store' },
   })
 }
