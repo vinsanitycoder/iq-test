@@ -262,6 +262,16 @@ Completion Screen
 - Max file size: 2MB
 - Accepted formats: JPG, PNG, SVG
 - Auto-resized on display
+- Logo is also used as browser favicon (via `generateMetadata` in `app/layout.tsx`)
+- Remove logo button available in Settings
+
+### User Management (Admin only)
+- Multiple admins supported — role stored in Supabase `app_metadata.role = 'admin'`
+- Admin can create HR users (temp password `Welcome@XXXX`)
+- Admin can reset any user's password
+- Admin can grant/revoke admin role (cannot remove last admin)
+- Admin can delete users (cannot delete self or last admin)
+- `UserManagement` component in Settings page, only visible to admins
 
 ### HR-Editable Text Field Limits
 - Company name: 60 characters
@@ -291,6 +301,22 @@ Completion Screen
 | Double-submit on test completion | Low | Loading state prevents this |
 | Indeed CSV column validation | Medium | Validate before import |
 
+## Stale UI Rules (must follow for all future features)
+
+Any HR page or component that shows live data MUST follow all four rules:
+
+1. **API GET routes** — send `Cache-Control: no-store` header
+2. **HR server pages** — add `export const dynamic = 'force-dynamic'`
+3. **Client fetches** — use `cache: 'no-store'` on every `fetch()` call
+4. **Prop→state components** — add `useEffect(() => { setState(prop) }, [prop])` to sync when parent re-renders
+
+## Live Deployment
+
+- **URL:** cognitivetest.fynloapps.com
+- **GitHub:** https://github.com/vinsanitycoder/iq-test
+- **Host:** Vercel (auto-deploys on push to main)
+- **DNS:** Cloudflare CNAME `cognitivetest` → `cname.vercel-dns.com` (DNS only, grey cloud)
+
 ---
 
 ## Build Phases
@@ -305,6 +331,7 @@ Completion Screen
 - [x] Phase 8: HR Dashboard
 - [x] Phase 9: Testing & QA
 - [x] Phase 10: Deployment
+- [x] Post-launch: Bug fixes & feature additions (all complete)
 
 Update the checklist above when each phase is complete.
 
