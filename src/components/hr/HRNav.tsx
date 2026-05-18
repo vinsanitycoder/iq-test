@@ -1,11 +1,20 @@
+'use client'
+
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import LogoutButton from './LogoutButton'
-import { createAdminClient } from '@/lib/supabase/admin'
 
-export default async function HRNav() {
-  const admin = createAdminClient()
-  const { data: settings } = await admin.from('settings').select('company_name').single()
-  const companyName = settings?.company_name || 'Fynlo'
+export default function HRNav() {
+  const [companyName, setCompanyName] = useState('Fynlo')
+
+  useEffect(() => {
+    fetch('/api/settings')
+      .then(r => r.json())
+      .then(({ settings }) => {
+        if (settings?.company_name) setCompanyName(settings.company_name)
+      })
+      .catch(() => {})
+  }, [])
 
   return (
     <header className="bg-fynlo-dark text-white px-4 sm:px-6 py-4 flex items-center justify-between">
