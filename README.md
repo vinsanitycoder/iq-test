@@ -6,6 +6,22 @@ No per-seat fees. No third-party test provider. Fully hosted on your own account
 
 ---
 
+## Screenshots
+
+**Applicant flow**
+
+![Welcome screen](docs/welcome.png)
+![Name and email form](docs/form.png)
+![Practice questions](docs/practice.png)
+![Real test in progress](docs/real.png)
+
+**HR dashboard**
+
+![Results dashboard](docs/dashboard.png)
+![Settings page](docs/settings.png)
+
+---
+
 ## What it does
 
 **For applicants**
