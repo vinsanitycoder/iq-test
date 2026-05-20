@@ -1,6 +1,6 @@
 # Applicant Logical Test
 
-A free, open-source cognitive aptitude testing platform for hiring teams. Send applicants a single link — they complete a timed logical reasoning test — you review scored results in a private HR dashboard.
+A free, open-source cognitive aptitude testing platform for hiring teams. This application is designed for small HR teams who need a customized test and a system to manage their applicants. Send applicants a single link — they complete a timed logical reasoning test — you review scored results in a private HR dashboard. You can flag the applicants as passed, rejected. All this information can then be exported to use in your own HR systems.
 
 No per-seat fees. No third-party test provider. Fully hosted on your own accounts.
 
