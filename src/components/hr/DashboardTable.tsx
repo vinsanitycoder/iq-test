@@ -12,8 +12,25 @@ type DashboardRow = {
   percentile: number
   status: string
   created_at: string
+  personality_status: string
   applicants: { id: string; first_name: string; last_name: string; email: string } | null
   test_sessions: { time_taken_seconds: number | null; tab_switches: number } | null
+}
+
+const PERSONALITY_STATUS_LABELS: Record<string, string> = {
+  not_invited:  'Not invited',
+  invited:      'Invited',
+  in_progress:  'In Progress',
+  completed:    'Completed',
+  incomplete:   'Incomplete',
+}
+
+const PERSONALITY_STATUS_STYLES: Record<string, string> = {
+  not_invited:  'bg-gray-100 text-gray-400',
+  invited:      'bg-blue-100 text-blue-700',
+  in_progress:  'bg-yellow-100 text-yellow-700',
+  completed:    'bg-lime-200 text-green-900',
+  incomplete:   'bg-orange-100 text-orange-700',
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -239,8 +256,11 @@ export default function DashboardTable() {
                 <th className="text-left px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide hidden md:table-cell">
                   Date
                 </th>
+                <th className="text-left px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide hidden lg:table-cell">
+                  Personality
+                </th>
                 <th className="text-left px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide">
-                  Status
+                  IQ Status
                 </th>
                 <th className="px-4 py-3 w-8" />
               </tr>
@@ -267,7 +287,7 @@ export default function DashboardTable() {
                       />
                     </td>
                     <td className="px-4 py-3 max-w-0 w-full">
-                      <Link href={`/hr/applicant/${row.id}`} className="group">
+                      <Link href={`/hr/applicant/${applicant?.id ?? row.id}`} className="group">
                         <div className="font-semibold text-fynlo-dark group-hover:text-fynlo-teal transition-colors truncate">
                           {name}
                         </div>
@@ -290,6 +310,11 @@ export default function DashboardTable() {
                     </td>
                     <td className="px-4 py-3 text-fynlo-subtle hidden md:table-cell">
                       {formatDate(row.created_at)}
+                    </td>
+                    <td className="px-4 py-3 hidden lg:table-cell">
+                      <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${PERSONALITY_STATUS_STYLES[row.personality_status] ?? 'bg-gray-100 text-gray-400'}`}>
+                        {PERSONALITY_STATUS_LABELS[row.personality_status] ?? 'Not invited'}
+                      </span>
                     </td>
                     <td className="px-4 py-3">
                       <StatusDropdown
