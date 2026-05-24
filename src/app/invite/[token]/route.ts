@@ -1,9 +1,6 @@
-import { cookies } from 'next/headers'
-import { redirect } from 'next/navigation'
+import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { hashInviteToken } from '@/lib/personality/invite-token'
-
-export const dynamic = 'force-dynamic'
 
 const COOKIE_NAME = 'personality_session_token'
 const COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 7 // 7 days
@@ -16,16 +13,16 @@ interface InviteRow {
   status: 'pending' | 'accessed' | 'revoked'
 }
 
-export default async function InviteTokenPage({
-  params,
-}: {
-  params: Promise<{ token: string }>
-}) {
-  const { token } = await params
+export async function GET(
+  req: NextRequest,
+  ctx: { params: Promise<{ token: string }> }
+) {
+  const { token } = await ctx.params
+  const base = req.nextUrl.origin
 
-  // Token format check: 64-char hex
+  // Token format check: must be exactly 64 lowercase hex chars
   if (!token || !/^[a-f0-9]{64}$/.test(token)) {
-    redirect('/personality/invalid')
+    return NextResponse.redirect(new URL('/personality/invalid', base))
   }
 
   const tokenHash = hashInviteToken(token)
@@ -39,16 +36,16 @@ export default async function InviteTokenPage({
     .maybeSingle<InviteRow>()
 
   if (error || !invite) {
-    redirect('/personality/invalid')
+    return NextResponse.redirect(new URL('/personality/invalid', base))
   }
 
   if (invite.status === 'revoked') {
-    redirect('/personality/invalid')
+    return NextResponse.redirect(new URL('/personality/invalid', base))
   }
 
   // Live expiry check — never trust stored status alone
   if (new Date(invite.expires_at).getTime() < Date.now()) {
-    redirect('/personality/expired')
+    return NextResponse.redirect(new URL('/personality/expired', base))
   }
 
   // Mark first access (idempotent — only updates if not already set)
@@ -64,10 +61,11 @@ export default async function InviteTokenPage({
       .is('first_accessed_at', null)
   }
 
-  // Set the httpOnly session cookie (raw token, scoped to apex domain in prod)
+  // Build redirect response and set the httpOnly cookie on it
   const isProd = process.env.NODE_ENV === 'production'
-  const cookieStore = await cookies()
-  cookieStore.set(COOKIE_NAME, token, {
+  const response = NextResponse.redirect(new URL('/personality/welcome', base))
+
+  response.cookies.set(COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: 'lax',
     secure: isProd,
@@ -76,5 +74,5 @@ export default async function InviteTokenPage({
     ...(isProd ? { domain: '.fynloapps.com' } : {}),
   })
 
-  redirect('/personality/welcome')
+  return response
 }
