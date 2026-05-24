@@ -40,7 +40,7 @@ export default function WelcomeClient({ firstName, deadline, hasStarted }: Props
   }
 
   return (
-    <main className="min-h-screen bg-[#F7F7F3] flex flex-col font-[Nunito]">
+    <main className="min-h-screen bg-[#F7F7F3] flex flex-col font-nunito">
       {/* Header */}
       <header className="bg-[#0084AD] px-6 py-4">
         <p className="text-white font-semibold text-base">HR Assessment Hub</p>

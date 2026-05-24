@@ -161,7 +161,7 @@ export default function PersonalityTestPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#F7F7F3] flex items-center justify-center font-[Nunito]">
+      <main className="min-h-screen bg-[#F7F7F3] flex items-center justify-center font-nunito">
         <p className="text-[#4A6572]">Loading your assessment…</p>
       </main>
     )
@@ -179,7 +179,7 @@ export default function PersonalityTestPage() {
   const timerWarning = remainingSeconds !== null && remainingSeconds < 300
 
   return (
-    <main className="min-h-screen bg-[#F7F7F3] flex flex-col font-[Nunito]">
+    <main className="min-h-screen bg-[#F7F7F3] flex flex-col font-nunito">
 
       {/* Sticky header with timer */}
       <header className="bg-[#0084AD] px-6 py-4 flex items-center justify-between sticky top-0 z-10">

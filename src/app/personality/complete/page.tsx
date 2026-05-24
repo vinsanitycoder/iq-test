@@ -34,7 +34,7 @@ export default async function PersonalityCompletePage() {
   const firstName = applicant?.first_name ?? 'there'
 
   return (
-    <main className="min-h-screen bg-[#F7F7F3] flex flex-col font-[Nunito]">
+    <main className="min-h-screen bg-[#F7F7F3] flex flex-col font-nunito">
       <header className="bg-[#0084AD] px-6 py-4">
         <p className="text-white font-semibold text-base">HR Assessment Hub</p>
       </header>
