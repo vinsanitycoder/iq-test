@@ -10,22 +10,29 @@ const nunito = Nunito({
 })
 
 export async function generateMetadata(): Promise<Metadata> {
-  const supabase = createAdminClient()
-  const { data } = await supabase
-    .from('settings')
-    .select('company_name, company_logo_url')
-    .single()
+  try {
+    const supabase = createAdminClient()
+    const { data } = await supabase
+      .from('settings')
+      .select('company_name, company_logo_url')
+      .single()
 
-  const title = data?.company_name
-    ? `${data.company_name} — Applicant Test`
-    : 'Applicant Logical Test'
+    const title = data?.company_name
+      ? `${data.company_name} — Applicant Test`
+      : 'Applicant Logical Test'
 
-  return {
-    title,
-    description: 'Cognitive aptitude assessment',
-    icons: data?.company_logo_url
-      ? { icon: data.company_logo_url }
-      : undefined,
+    return {
+      title,
+      description: 'Cognitive aptitude assessment',
+      icons: data?.company_logo_url
+        ? { icon: data.company_logo_url }
+        : undefined,
+    }
+  } catch {
+    return {
+      title: 'Applicant Logical Test',
+      description: 'Cognitive aptitude assessment',
+    }
   }
 }
 
