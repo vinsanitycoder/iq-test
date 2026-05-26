@@ -654,7 +654,7 @@ export default function DashboardTable() {
                 <th className="text-left px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide hidden sm:table-cell">Label</th>
                 <th className="text-center px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide hidden lg:table-cell">Time</th>
                 <th className="text-center px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide hidden lg:table-cell">Tabs</th>
-                <th className="text-left px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide hidden md:table-cell">Date</th>
+                <th className="text-left px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide hidden md:table-cell whitespace-nowrap">Date</th>
                 <th className="text-left px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide hidden md:table-cell">Personality</th>
                 <th className="text-left px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide">Status</th>
                 <th className="px-4 py-3 w-8" />
@@ -708,7 +708,7 @@ export default function DashboardTable() {
                         <span className="text-xs text-fynlo-subtle">0</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-fynlo-subtle hidden md:table-cell">
+                    <td className="px-4 py-3 text-fynlo-subtle hidden md:table-cell whitespace-nowrap">
                       {formatDate(row.created_at)}
                     </td>
                     <td className="px-4 py-3 hidden md:table-cell">
