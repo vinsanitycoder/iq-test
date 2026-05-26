@@ -196,7 +196,7 @@ const s = StyleSheet.create({
   dimBarFill: {
     height: 8,
     backgroundColor: TEAL,
-    borderRadius: 4,
+    // No borderRadius — track overflow:hidden handles clipping
   },
   dimLabelRight: {
     color: BODY,
@@ -231,7 +231,6 @@ const s = StyleSheet.create({
   placeholder: {
     color: SUBTLE,
     fontSize: 9,
-    fontStyle: 'italic',
     textAlign: 'center',
     paddingVertical: 10,
   },
@@ -301,22 +300,35 @@ function formatDate(iso: string | null) {
 function ordinal(n: number) {
   const s = ['th', 'st', 'nd', 'rd']
   const v = n % 100
-  return n + (s[(v - 20) % 10] ?? s[v] ?? s[0]) + ' percentile'
+  return n + (s[(v - 20) % 10] ?? s[v] ?? s[0])
 }
 
 // ── Dimension bar sub-component ───────────────────────────────────────────────
+// Mirrors the behaviour of DimensionBar.tsx in the web dashboard:
+// - Bar fills from the WINNING pole's side (not always left)
+// - Displayed percentage is the dominance %, not the raw 0→100 score
+// - Score 0 = fully leftPole, 100 = fully rightPole
 function DimBar({
   leftPole, rightPole, score, label,
-}: { leftPole: string; rightPole: string; score: number; label: string }) {
-  const pct = Math.max(0, Math.min(100, score))
+}: { leftPole: string; rightPole: string; score: number | string; label: string }) {
+  // DB numeric(5,2) columns may arrive as strings — coerce explicitly
+  const pct = Math.max(0, Math.min(100, Number(score)))
+  const isRight = label === rightPole
+  // Dominance % — always 50–100 toward the winning pole
+  const displayPct = Math.round(isRight ? pct : 100 - pct)
+
   return (
     <View style={s.dimRow}>
       <Text style={s.dimLabel}>{leftPole}</Text>
-      <View style={s.dimBarTrack}>
-        <View style={[s.dimBarFill, { width: `${pct}%` }]} />
+      {/* Bar fills from the winning pole's side */}
+      <View style={[s.dimBarTrack, {
+        flexDirection: 'row',
+        justifyContent: isRight ? 'flex-end' : 'flex-start',
+      }]}>
+        <View style={[s.dimBarFill, { width: `${displayPct}%` }]} />
       </View>
       <Text style={s.dimLabelRight}>{rightPole}</Text>
-      <Text style={s.dimScore}>{label} {pct.toFixed(0)}%</Text>
+      <Text style={s.dimScore}>{label} {displayPct}%</Text>
     </View>
   )
 }
@@ -469,7 +481,7 @@ export function AssessmentReportDocument({
                   {/* Description */}
                   <Text style={s.description}>{typeCard.description}</Text>
 
-                  {/* Dimension bars */}
+                  {/* Dimension bars — score is raw 0–100 (0=left pole, 100=right pole) */}
                   <DimBar
                     leftPole="E" rightPole="I"
                     score={personalityResult.ei_score}
