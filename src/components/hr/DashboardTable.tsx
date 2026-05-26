@@ -678,6 +678,11 @@ export default function DashboardTable() {
                       <Link href={`/hr/applicant/${applicant?.id ?? row.id}`} className="group">
                         <div className="font-semibold text-fynlo-dark group-hover:text-fynlo-teal transition-colors truncate">{name}</div>
                         <div className="text-fynlo-subtle text-xs mt-0.5 truncate">{email}</div>
+                        {applicant?.role_applied_for && (
+                          <div className="text-fynlo-teal text-xs font-semibold mt-0.5 truncate">
+                            {applicant.role_applied_for}
+                          </div>
+                        )}
                       </Link>
                     </td>
                     <td className="px-4 py-3 text-center">
