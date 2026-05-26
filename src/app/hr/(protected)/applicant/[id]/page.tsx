@@ -344,6 +344,17 @@ export default function ApplicantDetailPage() {
             <h1 className="text-2xl font-black text-fynlo-dark">{name}</h1>
             <p className="text-fynlo-subtle text-sm mt-1">{applicant.email}</p>
           </div>
+          <a
+            href={`/api/hr/applicant/${id}/pdf`}
+            download
+            className="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-80"
+            style={{ backgroundColor: '#BC3F1D' }}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+              <path fillRule="evenodd" d="M10 3a.75.75 0 0 1 .75.75v7.69l2.22-2.22a.75.75 0 1 1 1.06 1.06l-3.5 3.5a.75.75 0 0 1-1.06 0l-3.5-3.5a.75.75 0 1 1 1.06-1.06l2.22 2.22V3.75A.75.75 0 0 1 10 3ZM5.75 16a.75.75 0 0 0 0 1.5h8.5a.75.75 0 0 0 0-1.5h-8.5Z" clipRule="evenodd" />
+            </svg>
+            Download PDF Report
+          </a>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
