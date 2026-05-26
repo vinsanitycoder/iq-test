@@ -16,6 +16,7 @@ export interface InviteEmailProps {
   inviteUrl: string
   deadlineLabel: string
   companyName?: string
+  customMessage?: string
 }
 
 const TEAL = '#0084AD'
@@ -28,7 +29,16 @@ export function InviteEmail({
   inviteUrl,
   deadlineLabel,
   companyName = 'Fynlo',
+  customMessage,
 }: InviteEmailProps) {
+  const defaultParagraphs = [
+    `Thanks for your interest in joining the team at ${companyName}. As the next step, we'd love for you to complete a short personality assessment.`,
+    `It's 100 questions and takes about 30–45 minutes. There are no right or wrong answers — just be yourself. You can pause and return on a different device if you need to.`,
+  ]
+  const paragraphs = customMessage
+    ? customMessage.split(/\n\n+/).filter(p => p.trim())
+    : defaultParagraphs
+
   return (
     <Html>
       <Head />
@@ -38,12 +48,11 @@ export function InviteEmail({
           <Heading as="h1" style={{ color: TEAL, fontSize: 24, margin: '0 0 16px 0' }}>
             Hi {applicantFirstName},
           </Heading>
-          <Text style={{ fontSize: 16, lineHeight: '24px', margin: '0 0 16px 0' }}>
-            Thanks for your interest in joining the team at {companyName}. As the next step, we&apos;d love for you to complete a short personality assessment.
-          </Text>
-          <Text style={{ fontSize: 16, lineHeight: '24px', margin: '0 0 16px 0' }}>
-            It&apos;s 100 questions and takes about 30–45 minutes. There are no right or wrong answers — just be yourself. You can pause and return on a different device if you need to.
-          </Text>
+          {paragraphs.map((para, i) => (
+            <Text key={i} style={{ fontSize: 16, lineHeight: '24px', margin: '0 0 16px 0', whiteSpace: 'pre-wrap' }}>
+              {para.trim()}
+            </Text>
+          ))}
           <Section style={{ textAlign: 'center', margin: '28px 0' }}>
             <Button
               href={inviteUrl}

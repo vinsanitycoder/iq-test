@@ -87,6 +87,10 @@ function minDeadline(): string {
 
 // ── Invite modal (shown from dashboard row) ────────────────────────────────
 
+const DEFAULT_EMAIL_BODY = `Thanks for your interest in joining us. As the next step, we'd love for you to complete a short personality assessment.
+
+It's 100 questions and takes about 30–45 minutes. There are no right or wrong answers — just be yourself. You can pause and return on a different device if you need to.`
+
 function InviteModal({
   applicantId,
   applicantFirstName,
@@ -101,6 +105,7 @@ function InviteModal({
   onSent: () => void
 }) {
   const [deadline, setDeadline] = useState(defaultDeadline())
+  const [emailBody, setEmailBody] = useState(DEFAULT_EMAIL_BODY)
   const [sending, setSending] = useState(false)
   const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null)
 
@@ -119,7 +124,7 @@ function InviteModal({
     const res = await fetch('/api/hr/invites', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ applicantId, expiresAt: expiresAt.toISOString() }),
+      body: JSON.stringify({ applicantId, expiresAt: expiresAt.toISOString(), customMessage: emailBody.trim() }),
     })
     const data = await res.json()
 
@@ -172,12 +177,22 @@ function InviteModal({
           />
         </div>
 
-        <div className="mb-5 bg-fynlo-bg rounded-xl p-4 text-sm text-fynlo-body space-y-2">
-          <div className="text-xs font-bold text-fynlo-subtle uppercase tracking-wide mb-2">Email preview</div>
-          <p><strong>Hi {applicantFirstName},</strong></p>
-          <p>Thanks for your interest in joining the team. As the next step, we&apos;d love for you to complete a short personality assessment.</p>
-          <p>It&apos;s 100 questions and takes about 30–45 minutes. There are no right or wrong answers — just be yourself.</p>
-          <p>Please complete it by <strong>{deadlineLabel}</strong>.</p>
+        <div className="mb-5">
+          <label className="block text-xs font-semibold text-fynlo-subtle uppercase tracking-wide mb-1">Email message</label>
+          <div className="text-xs text-fynlo-subtle mb-2">
+            <span className="font-medium text-fynlo-dark">Hi {applicantFirstName},</span> is added automatically at the top. The deadline and link are added at the bottom.
+          </div>
+          <textarea
+            value={emailBody}
+            onChange={e => setEmailBody(e.target.value)}
+            disabled={sending}
+            rows={6}
+            className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-fynlo-teal/40 disabled:opacity-50 resize-none leading-relaxed"
+          />
+          <div className="text-xs text-fynlo-subtle mt-1.5 flex justify-between">
+            <span>Use two line breaks to start a new paragraph.</span>
+            <span className={emailBody.length > 1800 ? 'text-orange-500 font-semibold' : ''}>{emailBody.length}/2000</span>
+          </div>
         </div>
 
         {result && (
@@ -193,7 +208,7 @@ function InviteModal({
             </button>
             <button
               onClick={handleSend}
-              disabled={sending || !deadline}
+              disabled={sending || !deadline || emailBody.trim().length === 0 || emailBody.length > 2000}
               className="flex-1 py-2.5 rounded-xl text-white text-sm font-semibold transition-opacity hover:opacity-80 disabled:opacity-40"
               style={{ backgroundColor: '#BC3F1D' }}
             >
@@ -519,7 +534,6 @@ export default function DashboardTable() {
                 <th className="text-left px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide w-full">Applicant</th>
                 <th className="text-center px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide">IQ</th>
                 <th className="text-left px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide hidden sm:table-cell">Label</th>
-                <th className="text-center px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide hidden md:table-cell">Percentile</th>
                 <th className="text-center px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide hidden lg:table-cell">Time</th>
                 <th className="text-center px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide hidden lg:table-cell">Tabs</th>
                 <th className="text-left px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide hidden md:table-cell">Date</th>
@@ -555,9 +569,6 @@ export default function DashboardTable() {
                       <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${labelStyle}`}>
                         {row.iq_label}
                       </span>
-                    </td>
-                    <td className="px-4 py-3 text-center text-fynlo-body hidden md:table-cell">
-                      {ordinal(row.percentile)}
                     </td>
                     <td className="px-4 py-3 text-center text-fynlo-body hidden lg:table-cell">
                       {formatTime(row.test_sessions?.time_taken_seconds ?? null)}

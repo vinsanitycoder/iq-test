@@ -41,14 +41,14 @@ export async function POST(req: NextRequest) {
   const caller = await requireAdmin()
   if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: NO_STORE })
 
-  let body: { applicantId?: string; expiresAt?: string }
+  let body: { applicantId?: string; expiresAt?: string; customMessage?: string }
   try {
     body = await req.json()
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body.' }, { status: 400, headers: NO_STORE })
   }
 
-  const { applicantId, expiresAt } = body
+  const { applicantId, expiresAt, customMessage } = body
   if (!applicantId || typeof applicantId !== 'string') {
     return NextResponse.json({ error: 'applicantId is required.' }, { status: 400, headers: NO_STORE })
   }
@@ -112,6 +112,7 @@ export async function POST(req: NextRequest) {
       applicantFirstName: applicant.first_name ?? 'there',
       inviteUrl,
       deadlineLabel: formatDeadline(expiresAt),
+      customMessage: customMessage?.trim() || undefined,
     })
   )
 
