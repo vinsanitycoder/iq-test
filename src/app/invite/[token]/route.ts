@@ -62,16 +62,17 @@ export async function GET(
   }
 
   // Build redirect response and set the httpOnly cookie on it
-  const isProd = process.env.NODE_ENV === 'production'
+  const host = req.headers.get('host') ?? ''
+  const isOnFynloapps = host === 'cognitivetest.fynloapps.com' || host.endsWith('.fynloapps.com')
   const response = NextResponse.redirect(new URL('/personality/welcome', base))
 
   response.cookies.set(COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: 'lax',
-    secure: isProd,
+    secure: true,
     path: '/',
     maxAge: COOKIE_MAX_AGE_SECONDS,
-    ...(isProd ? { domain: '.fynloapps.com' } : {}),
+    ...(isOnFynloapps ? { domain: '.fynloapps.com' } : {}),
   })
 
   return response
