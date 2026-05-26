@@ -1,6 +1,6 @@
 # Applicant Logical Test
 
-A free, open-source cognitive aptitude testing platform for hiring teams. This application is designed for small HR teams who need a customized test and a system to manage their applicants. Send applicants a single link — they complete a timed logical reasoning test — you review scored results in a private HR dashboard. You can flag the applicants as passed, rejected. All this information can then be exported to use in your own HR systems.
+A free, open-source cognitive aptitude testing platform for hiring teams. Send applicants a single link — they complete a timed logical reasoning test — you review scored results in a private HR dashboard.
 
 No per-seat fees. No third-party test provider. Fully hosted on your own accounts.
 
@@ -323,6 +323,26 @@ supabase/
 - The `SUPABASE_SERVICE_ROLE_KEY` is only ever used in server-side API routes — never in client code
 - Row-level security is enabled on every database table
 - Admin actions (create/delete users, grant admin) are double-checked server-side regardless of what the client sends
+
+---
+
+## Production environment variables
+
+These are the env vars set in **Vercel → Settings → Environment Variables**. Every var has a separate row per scope (Production / Preview / Development). **A wrong value in the Production scope will take the live site down** — `next.config.ts` runs a build-time sanity check that crashes the build if any of these look obviously wrong (e.g. a `vercel.app` URL pasted into `NEXT_PUBLIC_SUPABASE_URL`, or anon/service keys from different Supabase projects). If a Vercel build fails with `Aborting build: invalid environment configuration`, that's why.
+
+| Variable | Production value | Preview value (feature/personality-hub) |
+|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | `https://xqfgbvnpjpqtzbwiafvm.supabase.co` | Staging Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Production project's `anon` key (Supabase dashboard → Settings → API) | Staging project's `anon` key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Production project's `service_role` key | Staging project's `service_role` key |
+| `RESEND_API_KEY` | Same Resend key works for both | Same Resend key works for both |
+
+Rules when editing in the Vercel dashboard:
+1. **Always check the Environments column** before clicking save — make sure you're editing the scope you intend (Production vs Preview).
+2. **Never paste Vercel deployment URLs** (`*.vercel.app`) into any `SUPABASE_*` var. Supabase URLs always end in `.supabase.co`.
+3. **Never mix project keys** — the anon key, service role key, and URL must all be from the **same** Supabase project.
+4. After saving, redeploy with **"Use existing Build Cache" UNCHECKED**, or the new value won't take effect.
+5. Production env vars must match `.env.local` in this repo. If you change one in Vercel, update `.env.local` too (and vice versa).
 
 ---
 
