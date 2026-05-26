@@ -23,10 +23,17 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('Applicant insert error:', error)
-      // TEMP DIAGNOSTIC — surface Supabase error to caller while we investigate prod failure
+      // TEMP DIAGNOSTIC — full dump
       return NextResponse.json({
         error: 'Failed to create applicant',
-        debug: { message: error.message, code: error.code, details: error.details, hint: error.hint },
+        debug: {
+          keys: Object.keys(error as object),
+          stringified: JSON.stringify(error, Object.getOwnPropertyNames(error)),
+          name: (error as { name?: string }).name,
+          toString: String(error),
+          dataIsNull: data === null,
+          urlHost: (process.env.NEXT_PUBLIC_SUPABASE_URL || '').replace(/^https?:\/\//, '').split('.')[0],
+        },
       }, { status: 500 })
     }
 
