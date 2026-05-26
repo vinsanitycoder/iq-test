@@ -446,9 +446,9 @@ Any HR page or component that shows live data MUST follow all four rules:
 - [x] Phase 5: HR dashboard extensions
 - [x] Phase 6: Invite management UI
 - [x] Phase 7: PDF + Excel export (per-applicant PDF, bulk Excel, CSV with personality type)
-- [x] Phase 7b: Batch interview brief PDF + selected-only CSV/Excel exports (added this session)
+- [x] Phase 7b: Batch interview brief PDF + selected-only CSV/Excel exports
 - [x] Phase 8: QA on staging — full pass, all 13 checklist items verified
-- [ ] Phase 9: Production deployment ← NEXT
+- [x] **Phase 9: Production deployment** — 27 May 2026. Personality hub now live at cognitivetest.fynloapps.com. All 8 smoke tests passed: public IQ landing, HR login, dashboard, existing applicants intact, per-applicant PDF, bulk export (Brief/CSV/Excel), invite send + email arrival, /personality/welcome + first 10 questions saved.
 
 Update the checklist above when each phase is complete.
 
