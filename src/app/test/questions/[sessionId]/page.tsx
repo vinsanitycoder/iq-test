@@ -36,6 +36,7 @@ export default function QuestionsPage() {
   const [saving, setSaving] = useState(false)
   const [finishing, setFinishing] = useState(false)
   const [ready, setReady] = useState(false)
+  const [saveError, setSaveError] = useState('')
 
   // Refs prevent stale closures in timer callbacks without re-running effects
   const questionsRef = useRef<QuestionForClient[]>([])
@@ -65,22 +66,32 @@ export default function QuestionsPage() {
 
     const question = questionsRef.current[currentIndexRef.current]
     if (question) {
-      await fetch('/api/test/answer', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId,
-          questionId: question.id,
-          selectedAnswer: selectedRef.current,
-        }),
-      }).catch(() => {})
+      try {
+        const res = await fetch('/api/test/answer', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId,
+            questionId: question.id,
+            selectedAnswer: selectedRef.current,
+          }),
+        })
+        if (!res.ok) console.error('finishTest: answer save failed', res.status)
+      } catch (e) {
+        console.error('finishTest: answer save error', e)
+      }
     }
 
-    await fetch('/api/test/complete', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sessionId, expired }),
-    }).catch(() => {})
+    try {
+      const res = await fetch('/api/test/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId, expired }),
+      })
+      if (!res.ok) console.error('finishTest: complete failed', res.status)
+    } catch (e) {
+      console.error('finishTest: complete error', e)
+    }
 
     router.push('/test/complete')
   }, [sessionId, router])
@@ -196,28 +207,58 @@ export default function QuestionsPage() {
   async function handleNext(skip: boolean) {
     if (saving || finishing) return
     setSaving(true)
+    setSaveError('')
 
     const question = questions[currentIndex]
     const answerToSave = skip ? null : selected
 
-    await fetch('/api/test/answer', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sessionId,
-        questionId: question.id,
-        selectedAnswer: answerToSave,
-      }),
-    }).catch(() => {})
-
-    if (currentIndex === questions.length - 1) {
-      autoSubmittedRef.current = true
-      await fetch('/api/test/complete', {
+    // Save answer — surface failures so the applicant can retry instead of
+    // silently losing the answer (this is what caused the May 2026 outage
+    // where every applicant scored 0).
+    let answerSaved = false
+    try {
+      const res = await fetch('/api/test/answer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId, expired: false }),
-      }).catch(() => {})
+        body: JSON.stringify({
+          sessionId,
+          questionId: question.id,
+          selectedAnswer: answerToSave,
+        }),
+      })
+      answerSaved = res.ok
+    } catch {
+      answerSaved = false
+    }
+
+    if (!answerSaved) {
+      setSaveError("Couldn't save your answer. Please check your connection and tap Next to try again.")
+      setSaving(false)
+      return
+    }
+
+    if (currentIndex === questions.length - 1) {
+      // Last question — completion must also succeed before we leave the test.
+      autoSubmittedRef.current = true
       setFinishing(true)
+      let completed = false
+      try {
+        const res = await fetch('/api/test/complete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId, expired: false }),
+        })
+        completed = res.ok
+      } catch {
+        completed = false
+      }
+      if (!completed) {
+        autoSubmittedRef.current = false
+        setFinishing(false)
+        setSaving(false)
+        setSaveError("Couldn't submit your test. Please check your connection and tap Submit Test to try again.")
+        return
+      }
       router.push('/test/complete')
       return
     }
@@ -341,6 +382,13 @@ export default function QuestionsPage() {
                 )
               })}
             </div>
+
+            {/* Save-failure banner — only appears when the previous save errored */}
+            {saveError && (
+              <div className="mb-3 px-3 py-2 rounded-xl bg-red-50 border border-red-200 text-xs font-semibold text-red-600 text-center">
+                {saveError}
+              </div>
+            )}
 
             {/* Next button — requires a selection */}
             <button
