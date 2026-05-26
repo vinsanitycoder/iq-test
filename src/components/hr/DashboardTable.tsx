@@ -14,6 +14,7 @@ type DashboardRow = {
   status: string
   created_at: string
   personality_status: string
+  personality_type_code: string | null
   applicants: {
     id: string
     first_name: string
@@ -616,6 +617,12 @@ export default function DashboardTable() {
                           </svg>
                           Invite
                         </button>
+                      ) : row.personality_status === 'completed' && row.personality_type_code ? (
+                        <div className="flex flex-col gap-0.5">
+                          <span className="inline-block px-2.5 py-1 rounded-full text-xs font-black tracking-wider bg-purple-100 text-purple-800">
+                            {row.personality_type_code}
+                          </span>
+                        </div>
                       ) : (
                         <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${PERSONALITY_STATUS_STYLES[row.personality_status] ?? 'bg-gray-100 text-gray-400'}`}>
                           {PERSONALITY_STATUS_LABELS[row.personality_status] ?? 'Not invited'}

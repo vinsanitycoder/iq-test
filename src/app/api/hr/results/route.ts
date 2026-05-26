@@ -24,21 +24,25 @@ export async function GET() {
     .map((r: any) => r.applicants?.id)
     .filter(Boolean) as string[]
 
-  // Build personality_status map for each applicant
+  // Build personality_status and type_code maps for each applicant
   const personalityStatusMap: Record<string, string> = {}
+  const personalityTypeMap: Record<string, string> = {}
 
   if (applicantIds.length > 0) {
     // 1. personality_results — most authoritative (most recent wins per applicant)
     const { data: prRows } = await admin
       .from('personality_results' as any)
-      .select('applicant_id, status')
+      .select('applicant_id, status, type_code')
       .in('applicant_id', applicantIds)
       .order('created_at', { ascending: false })
-      .returns<{ applicant_id: string; status: string }[]>()
+      .returns<{ applicant_id: string; status: string; type_code: string | null }[]>()
 
     for (const row of prRows ?? []) {
-      personalityStatusMap[row.applicant_id] =
-        row.status === 'incomplete' ? 'incomplete' : 'completed'
+      if (!personalityStatusMap[row.applicant_id]) {
+        personalityStatusMap[row.applicant_id] =
+          row.status === 'incomplete' ? 'incomplete' : 'completed'
+        if (row.type_code) personalityTypeMap[row.applicant_id] = row.type_code
+      }
     }
 
     // 2. in_progress sessions (for applicants without a result yet)
@@ -76,6 +80,7 @@ export async function GET() {
     ...r,
     status: r.applicants?.status ?? 'pending_review',
     personality_status: personalityStatusMap[r.applicants?.id ?? ''] ?? 'not_invited',
+    personality_type_code: personalityTypeMap[r.applicants?.id ?? ''] ?? null,
   }))
 
   return NextResponse.json({ results: enriched }, {
