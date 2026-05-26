@@ -10,6 +10,7 @@ export default function HRLoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [showForgotModal, setShowForgotModal] = useState(false)
   const router = useRouter()
 
   async function handleSubmit(e: React.FormEvent) {
@@ -106,8 +107,128 @@ export default function HRLoginPage() {
             >
               {loading ? 'Signing in…' : 'Sign in'}
             </button>
+
+            <div className="text-center pt-2">
+              <button
+                type="button"
+                onClick={() => setShowForgotModal(true)}
+                className="text-sm text-fynlo-subtle hover:text-fynlo-teal transition-colors"
+              >
+                Forgot your password?
+              </button>
+            </div>
           </form>
         </div>
+      </div>
+
+      {showForgotModal && (
+        <ForgotPasswordModal
+          initialEmail={email}
+          onClose={() => setShowForgotModal(false)}
+        />
+      )}
+    </div>
+  )
+}
+
+// ── Forgot password modal ─────────────────────────────────────────────
+function ForgotPasswordModal({
+  initialEmail,
+  onClose,
+}: {
+  initialEmail: string
+  onClose: () => void
+}) {
+  const [resetEmail, setResetEmail] = useState(initialEmail)
+  const [sending, setSending] = useState(false)
+  const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null)
+
+  async function handleSend(e: React.FormEvent) {
+    e.preventDefault()
+    if (sending) return
+    setSending(true)
+    setResult(null)
+
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail.trim(), {
+      redirectTo: `${window.location.origin}/hr/reset-password`,
+    })
+
+    if (error) {
+      // Don't disclose whether the email exists — same message either way
+      setResult({ ok: true, message: 'If that email is registered, a reset link has been sent. Check your inbox (and spam folder).' })
+    } else {
+      setResult({ ok: true, message: 'If that email is registered, a reset link has been sent. Check your inbox (and spam folder).' })
+    }
+    setSending(false)
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center px-4"
+      style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}
+      onClick={e => { if (e.target === e.currentTarget && !sending) onClose() }}
+    >
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="text-lg font-black text-fynlo-dark">Reset your password</h3>
+          <button onClick={onClose} disabled={sending} className="text-fynlo-subtle hover:text-fynlo-dark transition-colors disabled:opacity-40">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {!result ? (
+          <form onSubmit={handleSend}>
+            <p className="text-sm text-fynlo-body mb-4">
+              Enter your HR email below. We&apos;ll send you a link to set a new password.
+            </p>
+            <input
+              type="email"
+              value={resetEmail}
+              onChange={e => setResetEmail(e.target.value)}
+              required
+              autoFocus
+              autoComplete="email"
+              placeholder="hr@company.com"
+              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-fynlo-dark text-sm focus:outline-none focus:ring-2 focus:ring-fynlo-teal/30 focus:border-fynlo-teal transition-colors mb-5"
+            />
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={sending}
+                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-fynlo-body hover:bg-gray-50 transition-colors disabled:opacity-40"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={sending || !resetEmail.trim()}
+                className="flex-1 py-2.5 rounded-xl bg-fynlo-teal text-white text-sm font-semibold hover:bg-fynlo-teal/90 transition-colors disabled:opacity-40"
+              >
+                {sending ? 'Sending…' : 'Send reset link'}
+              </button>
+            </div>
+          </form>
+        ) : (
+          <>
+            <div className="mb-5 px-4 py-3 rounded-xl text-sm bg-green-50 text-green-800">
+              {result.message}
+            </div>
+            <button
+              onClick={onClose}
+              className="w-full py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-fynlo-body hover:bg-gray-50 transition-colors"
+            >
+              Close
+            </button>
+          </>
+        )}
       </div>
     </div>
   )
