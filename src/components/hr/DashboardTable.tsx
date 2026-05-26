@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import { createBrowserClient } from '@supabase/ssr'
 import StatusDropdown from './StatusDropdown'
 import RowDeleteButton from './RowDeleteButton'
 
@@ -64,14 +65,155 @@ function ordinal(n: number) {
   return n + (s[(v - 20) % 10] ?? s[v] ?? s[0])
 }
 
+function defaultDeadline(): string {
+  const d = new Date()
+  d.setDate(d.getDate() + 7)
+  return d.toISOString().split('T')[0]
+}
+
+function minDeadline(): string {
+  const d = new Date()
+  d.setDate(d.getDate() + 1)
+  return d.toISOString().split('T')[0]
+}
+
+// ── Invite modal (shown from dashboard row) ────────────────────────────────
+
+function InviteModal({
+  applicantId,
+  applicantFirstName,
+  applicantEmail,
+  onClose,
+  onSent,
+}: {
+  applicantId: string
+  applicantFirstName: string
+  applicantEmail: string
+  onClose: () => void
+  onSent: () => void
+}) {
+  const [deadline, setDeadline] = useState(defaultDeadline())
+  const [sending, setSending] = useState(false)
+  const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null)
+
+  const deadlineLabel = deadline
+    ? new Date(deadline).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+    : '—'
+
+  async function handleSend() {
+    if (sending) return
+    setSending(true)
+    setResult(null)
+
+    const expiresAt = new Date(deadline)
+    expiresAt.setHours(23, 59, 59, 999)
+
+    const res = await fetch('/api/hr/invites', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ applicantId, expiresAt: expiresAt.toISOString() }),
+    })
+    const data = await res.json()
+
+    if (!res.ok) {
+      setResult({ ok: false, message: data.error ?? 'Failed to send invite.' })
+    } else {
+      setResult({
+        ok: true,
+        message: data.emailSent
+          ? `Invite sent to ${applicantEmail}.`
+          : `Invite created but the email failed to send. Please resend from the applicant page.`,
+      })
+      onSent()
+    }
+    setSending(false)
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center px-4"
+      style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}
+      onClick={e => { if (e.target === e.currentTarget && !sending) onClose() }}
+    >
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="text-lg font-black text-fynlo-dark">Send Personality Invite</h3>
+          <button onClick={onClose} disabled={sending} className="text-fynlo-subtle hover:text-fynlo-dark transition-colors disabled:opacity-40">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="mb-4">
+          <div className="text-xs font-semibold text-fynlo-subtle uppercase tracking-wide mb-1">Sending to</div>
+          <div className="text-sm font-medium text-fynlo-dark">
+            {applicantFirstName} · <span className="text-fynlo-subtle font-normal">{applicantEmail}</span>
+          </div>
+        </div>
+
+        <div className="mb-5">
+          <label className="block text-xs font-semibold text-fynlo-subtle uppercase tracking-wide mb-1">Deadline</label>
+          <input
+            type="date"
+            value={deadline}
+            min={minDeadline()}
+            onChange={e => setDeadline(e.target.value)}
+            disabled={sending}
+            className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-fynlo-teal/40 disabled:opacity-50"
+          />
+        </div>
+
+        <div className="mb-5 bg-fynlo-bg rounded-xl p-4 text-sm text-fynlo-body space-y-2">
+          <div className="text-xs font-bold text-fynlo-subtle uppercase tracking-wide mb-2">Email preview</div>
+          <p><strong>Hi {applicantFirstName},</strong></p>
+          <p>Thanks for your interest in joining the team. As the next step, we&apos;d love for you to complete a short personality assessment.</p>
+          <p>It&apos;s 100 questions and takes about 30–45 minutes. There are no right or wrong answers — just be yourself.</p>
+          <p>Please complete it by <strong>{deadlineLabel}</strong>.</p>
+        </div>
+
+        {result && (
+          <div className={`mb-4 px-4 py-3 rounded-xl text-sm font-medium ${result.ok ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-700'}`}>
+            {result.message}
+          </div>
+        )}
+
+        {!result?.ok ? (
+          <div className="flex gap-3">
+            <button onClick={onClose} disabled={sending} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-fynlo-body hover:bg-gray-50 transition-colors disabled:opacity-40">
+              Cancel
+            </button>
+            <button
+              onClick={handleSend}
+              disabled={sending || !deadline}
+              className="flex-1 py-2.5 rounded-xl text-white text-sm font-semibold transition-opacity hover:opacity-80 disabled:opacity-40"
+              style={{ backgroundColor: '#BC3F1D' }}
+            >
+              {sending ? 'Sending…' : 'Send Invite'}
+            </button>
+          </div>
+        ) : (
+          <button onClick={onClose} className="w-full py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-fynlo-body hover:bg-gray-50 transition-colors">
+            Close
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── Main component ─────────────────────────────────────────────────────────
+
 export default function DashboardTable() {
   const [results, setResults] = useState<DashboardRow[]>([])
   const [loading, setLoading] = useState(true)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [bulkStatus, setBulkStatus] = useState('')
   const [applyingStatus, setApplyingStatus] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [inviteTarget, setInviteTarget] = useState<{ id: string; firstName: string; email: string } | null>(null)
   const selectAllRef = useRef<HTMLInputElement>(null)
 
   const load = useCallback(async () => {
@@ -88,7 +230,16 @@ export default function DashboardTable() {
 
   useEffect(() => { load() }, [load])
 
-  // Drive the indeterminate state of the select-all checkbox
+  useEffect(() => {
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+    supabase.auth.getUser().then(({ data }) => {
+      setIsAdmin(data.user?.app_metadata?.role === 'admin')
+    })
+  }, [])
+
   useEffect(() => {
     if (!selectAllRef.current) return
     const all = results.length > 0 && selected.size === results.length
@@ -98,11 +249,8 @@ export default function DashboardTable() {
   }, [selected, results])
 
   function toggleAll() {
-    if (selected.size === results.length) {
-      setSelected(new Set())
-    } else {
-      setSelected(new Set(results.map(r => r.id)))
-    }
+    if (selected.size === results.length) setSelected(new Set())
+    else setSelected(new Set(results.map(r => r.id)))
   }
 
   function toggleOne(id: string) {
@@ -123,15 +271,18 @@ export default function DashboardTable() {
     if (!bulkStatus || applyingStatus) return
     setApplyingStatus(true)
     try {
+      const applicantIds = results
+        .filter(r => selected.has(r.id) && r.applicants?.id)
+        .map(r => r.applicants!.id)
       await fetch('/api/hr/bulk-status', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ resultIds: [...selected], status: bulkStatus }),
+        body: JSON.stringify({ applicantIds, status: bulkStatus }),
       })
       clearSelection()
       await load()
     } catch {
-      // silent — data unchanged
+      // silent
     } finally {
       setApplyingStatus(false)
     }
@@ -180,9 +331,7 @@ export default function DashboardTable() {
       {/* Bulk action bar */}
       {selectedCount > 0 && (
         <div className="mb-3 flex flex-wrap items-center gap-3 bg-fynlo-dark text-white px-4 py-3 rounded-xl">
-          <span className="text-sm font-semibold whitespace-nowrap">
-            {selectedCount} selected
-          </span>
+          <span className="text-sm font-semibold whitespace-nowrap">{selectedCount} selected</span>
 
           <div className="flex items-center gap-2 flex-1 min-w-0">
             <select
@@ -212,11 +361,7 @@ export default function DashboardTable() {
             Delete selected
           </button>
 
-          <button
-            onClick={clearSelection}
-            title="Clear selection"
-            className="text-white/60 hover:text-white transition-colors"
-          >
+          <button onClick={clearSelection} className="text-white/60 hover:text-white transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -231,37 +376,16 @@ export default function DashboardTable() {
             <thead>
               <tr className="border-b border-gray-100">
                 <th className="px-4 py-3 w-8">
-                  <input
-                    ref={selectAllRef}
-                    type="checkbox"
-                    onChange={toggleAll}
-                    className="rounded border-gray-300 text-fynlo-teal cursor-pointer accent-fynlo-teal"
-                  />
+                  <input ref={selectAllRef} type="checkbox" onChange={toggleAll} className="rounded border-gray-300 text-fynlo-teal cursor-pointer accent-fynlo-teal" />
                 </th>
-                <th className="text-left px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide w-full">
-                  Applicant
-                </th>
-                <th className="text-center px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide">
-                  IQ
-                </th>
-                <th className="text-left px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide hidden sm:table-cell">
-                  Label
-                </th>
-                <th className="text-center px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide hidden md:table-cell">
-                  Percentile
-                </th>
-                <th className="text-center px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide hidden lg:table-cell">
-                  Time
-                </th>
-                <th className="text-left px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide hidden md:table-cell">
-                  Date
-                </th>
-                <th className="text-left px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide hidden lg:table-cell">
-                  Personality
-                </th>
-                <th className="text-left px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide">
-                  IQ Status
-                </th>
+                <th className="text-left px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide w-full">Applicant</th>
+                <th className="text-center px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide">IQ</th>
+                <th className="text-left px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide hidden sm:table-cell">Label</th>
+                <th className="text-center px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide hidden md:table-cell">Percentile</th>
+                <th className="text-center px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide hidden lg:table-cell">Time</th>
+                <th className="text-left px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide hidden md:table-cell">Date</th>
+                <th className="text-left px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide hidden lg:table-cell">Personality</th>
+                <th className="text-left px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide">Status</th>
                 <th className="px-4 py-3 w-8" />
               </tr>
             </thead>
@@ -272,25 +396,16 @@ export default function DashboardTable() {
                 const email = applicant?.email ?? '—'
                 const labelStyle = IQ_LABEL_STYLES[row.iq_label] ?? 'bg-gray-100 text-gray-700'
                 const isSelected = selected.has(row.id)
+                const canInvite = row.personality_status === 'not_invited'
 
                 return (
-                  <tr
-                    key={row.id}
-                    className={`transition-colors ${isSelected ? 'bg-teal-50' : 'hover:bg-fynlo-bg/60'}`}
-                  >
+                  <tr key={row.id} className={`transition-colors ${isSelected ? 'bg-teal-50' : 'hover:bg-fynlo-bg/60'}`}>
                     <td className="px-4 py-3">
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => toggleOne(row.id)}
-                        className="rounded border-gray-300 cursor-pointer accent-fynlo-teal"
-                      />
+                      <input type="checkbox" checked={isSelected} onChange={() => toggleOne(row.id)} className="rounded border-gray-300 cursor-pointer accent-fynlo-teal" />
                     </td>
                     <td className="px-4 py-3 max-w-0 w-full">
                       <Link href={`/hr/applicant/${applicant?.id ?? row.id}`} className="group">
-                        <div className="font-semibold text-fynlo-dark group-hover:text-fynlo-teal transition-colors truncate">
-                          {name}
-                        </div>
+                        <div className="font-semibold text-fynlo-dark group-hover:text-fynlo-teal transition-colors truncate">{name}</div>
                         <div className="text-fynlo-subtle text-xs mt-0.5 truncate">{email}</div>
                       </Link>
                     </td>
@@ -312,24 +427,33 @@ export default function DashboardTable() {
                       {formatDate(row.created_at)}
                     </td>
                     <td className="px-4 py-3 hidden lg:table-cell">
-                      <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${PERSONALITY_STATUS_STYLES[row.personality_status] ?? 'bg-gray-100 text-gray-400'}`}>
-                        {PERSONALITY_STATUS_LABELS[row.personality_status] ?? 'Not invited'}
-                      </span>
+                      {isAdmin && canInvite ? (
+                        <button
+                          onClick={() => setInviteTarget({ id: applicant!.id, firstName: applicant!.first_name, email: applicant!.email })}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold text-white transition-opacity hover:opacity-80"
+                          style={{ backgroundColor: '#0084AD' }}
+                        >
+                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                          </svg>
+                          Invite
+                        </button>
+                      ) : (
+                        <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${PERSONALITY_STATUS_STYLES[row.personality_status] ?? 'bg-gray-100 text-gray-400'}`}>
+                          {PERSONALITY_STATUS_LABELS[row.personality_status] ?? 'Not invited'}
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <StatusDropdown
-                        resultId={row.id}
+                        applicantId={applicant?.id ?? row.id}
                         currentStatus={row.status}
                         compact
                         onUpdate={load}
                       />
                     </td>
                     <td className="px-4 py-3">
-                      <RowDeleteButton
-                        applicantId={applicant?.id ?? ''}
-                        applicantName={name}
-                        onDelete={load}
-                      />
+                      <RowDeleteButton applicantId={applicant?.id ?? ''} applicantName={name} onDelete={load} />
                     </td>
                   </tr>
                 )
@@ -338,6 +462,17 @@ export default function DashboardTable() {
           </table>
         </div>
       </div>
+
+      {/* Send invite modal */}
+      {inviteTarget && (
+        <InviteModal
+          applicantId={inviteTarget.id}
+          applicantFirstName={inviteTarget.firstName}
+          applicantEmail={inviteTarget.email}
+          onClose={() => setInviteTarget(null)}
+          onSent={() => { load(); setInviteTarget(null) }}
+        />
+      )}
 
       {/* Bulk delete confirmation modal */}
       {showDeleteModal && (
@@ -357,18 +492,10 @@ export default function DashboardTable() {
               {selectedNames.map((n, i) => <li key={i}>· {n}</li>)}
             </ul>
             <div className="flex gap-3">
-              <button
-                onClick={() => setShowDeleteModal(false)}
-                disabled={deleting}
-                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-fynlo-body hover:bg-gray-50 transition-colors disabled:opacity-40"
-              >
+              <button onClick={() => setShowDeleteModal(false)} disabled={deleting} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-fynlo-body hover:bg-gray-50 transition-colors disabled:opacity-40">
                 Cancel
               </button>
-              <button
-                onClick={handleBulkDelete}
-                disabled={deleting}
-                className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition-colors disabled:opacity-60"
-              >
+              <button onClick={handleBulkDelete} disabled={deleting} className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition-colors disabled:opacity-60">
                 {deleting ? 'Deleting…' : 'Yes, delete all'}
               </button>
             </div>

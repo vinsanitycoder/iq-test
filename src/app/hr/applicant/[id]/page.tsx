@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import HRNav from '@/components/hr/HRNav'
-import StatusDropdown from '@/components/hr/StatusDropdown'
 import DeleteButton from '@/components/hr/DeleteButton'
 import DimensionBar from '@/components/hr/DimensionBar'
 import InvitePanel from '@/components/hr/InvitePanel'
@@ -69,22 +68,6 @@ const IQ_LABEL_STYLES: Record<string, string> = {
   'Average':       'bg-yellow-100 text-yellow-800',
   'Low Average':   'bg-orange-100 text-orange-800',
   'Below Average': 'bg-red-100 text-red-800',
-}
-
-const PERSONALITY_RESULT_STATUS_LABELS: Record<string, string> = {
-  pending_review: 'Pending',
-  reviewed:       'Reviewed',
-  shortlisted:    'Shortlisted',
-  rejected:       'Rejected',
-  incomplete:     'Incomplete',
-}
-
-const PERSONALITY_RESULT_STATUS_STYLES: Record<string, string> = {
-  pending_review: 'bg-gray-100 text-gray-600 border-gray-200',
-  reviewed:       'bg-blue-100 text-blue-700 border-blue-200',
-  shortlisted:    'bg-lime-200 text-green-900 border-lime-300',
-  rejected:       'bg-red-100 text-red-700 border-red-200',
-  incomplete:     'bg-orange-100 text-orange-700 border-orange-200',
 }
 
 function formatTime(seconds: number | null) {
@@ -188,53 +171,6 @@ function EditableField({
   )
 }
 
-// ── Personality result status dropdown ────────────────────────────────────────
-
-function PersonalityStatusDropdown({
-  resultId,
-  currentStatus,
-  onUpdate,
-}: {
-  resultId: string
-  currentStatus: string
-  onUpdate: () => void
-}) {
-  const [status, setStatus] = useState(currentStatus)
-  const [saving, setSaving] = useState(false)
-
-  useEffect(() => { setStatus(currentStatus) }, [currentStatus])
-
-  async function handleChange(next: string) {
-    if (next === status || saving) return
-    setSaving(true)
-    const prev = status
-    setStatus(next)
-    const res = await fetch(`/api/hr/personality-result/${resultId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: next }),
-    })
-    if (!res.ok) setStatus(prev)
-    else onUpdate()
-    setSaving(false)
-  }
-
-  const style = PERSONALITY_RESULT_STATUS_STYLES[status] ?? 'bg-gray-100 text-gray-600 border-gray-200'
-
-  return (
-    <select
-      value={status}
-      disabled={saving}
-      onChange={e => handleChange(e.target.value)}
-      className={`appearance-none cursor-pointer rounded-full border font-semibold text-sm px-3 py-1.5 transition-colors disabled:opacity-60 ${style}`}
-    >
-      {Object.entries(PERSONALITY_RESULT_STATUS_LABELS).map(([v, l]) => (
-        <option key={v} value={v}>{l}</option>
-      ))}
-    </select>
-  )
-}
-
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function ApplicantDetailPage() {
@@ -329,9 +265,8 @@ export default function ApplicantDetailPage() {
           {/* IQ Score card */}
           {iqResult ? (
             <div className="bg-white rounded-card shadow-card p-6">
-              <div className="flex items-center justify-between mb-5">
+              <div className="mb-5">
                 <h2 className="text-xs font-bold text-fynlo-subtle uppercase tracking-wide">IQ Score</h2>
-                <StatusDropdown resultId={iqResult.id} currentStatus={iqResult.status} />
               </div>
 
               <div className="flex items-center gap-5 mb-6">
@@ -379,13 +314,8 @@ export default function ApplicantDetailPage() {
           {/* Personality result card */}
           {personalityResult && personalityResult.status !== 'incomplete' && typeCard ? (
             <div className="bg-white rounded-card shadow-card p-6">
-              <div className="flex items-center justify-between mb-5">
+              <div className="mb-5">
                 <h2 className="text-xs font-bold text-fynlo-subtle uppercase tracking-wide">Personality</h2>
-                <PersonalityStatusDropdown
-                  resultId={personalityResult.id}
-                  currentStatus={personalityResult.status}
-                  onUpdate={load}
-                />
               </div>
 
               {/* Type badge */}
@@ -494,26 +424,6 @@ export default function ApplicantDetailPage() {
             </dl>
           </div>
 
-          {/* Review / meta */}
-          {iqResult && (
-            <div className="bg-white rounded-card shadow-card p-6">
-              <h2 className="text-xs font-bold text-fynlo-subtle uppercase tracking-wide mb-5">Review</h2>
-              <dl className="grid grid-cols-1 gap-4">
-                <div>
-                  <dt className="text-xs font-semibold text-fynlo-subtle uppercase tracking-wide mb-1">IQ status</dt>
-                  <dd className="text-fynlo-dark font-medium">{iqResult.status.replace(/_/g, ' ')}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-semibold text-fynlo-subtle uppercase tracking-wide mb-1">IQ reviewed at</dt>
-                  <dd className="text-fynlo-dark font-medium">{iqResult.reviewed_at ? formatDateTime(iqResult.reviewed_at) : 'Not yet reviewed'}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-semibold text-fynlo-subtle uppercase tracking-wide mb-1">IQ submitted at</dt>
-                  <dd className="text-fynlo-dark font-medium">{formatDateTime(iqResult.created_at)}</dd>
-                </div>
-              </dl>
-            </div>
-          )}
         </div>
 
         {/* Invite history */}

@@ -507,8 +507,8 @@ The staging Supabase is a **separate** project from production. When setting up 
 
 1. `supabase/01_schema.sql` — IQ test tables + settings seed row
 2. `supabase/02_rls.sql` — Row Level Security policies for IQ tables
-3. `supabase/03_questions.sql` — All 194 IQ questions (40 real + practice + extras)
-4. `supabase/04_personality_hub.sql` — Personality hub tables + RLS (idempotent, safe to re-run)
+3. `supabase/03_questions.sql` — 245 IQ questions (symbol-based, exported from production). Upserts by UUID — safe to re-run.
+4. `supabase/04_personality_hub.sql` — Personality hub tables + RLS + applicants.status column (idempotent, safe to re-run)
 
 **Skip files that have already been run** — if you get "relation already exists", the table is there and you can move on.
 
@@ -527,6 +527,16 @@ UPDATE auth.users SET email_confirmed_at = now() WHERE email = 'your@email.com';
 
 ---
 
+## Dashboard UX — Key Design Decisions (locked this session)
+
+- **Single applicant-level status** — `applicants.status` column (pending_review / reviewed / shortlisted / rejected). Replaces separate IQ status and personality status dropdowns everywhere.
+- **Dashboard Personality column** — shows "Invite" button (admin only) when not_invited; shows status badge otherwise.
+- **Send Invite modal** — lives inline in DashboardTable, triggered from the Personality column button.
+- **Applicant detail page** — read-only. No status dropdowns. IQ card, personality card, editable fields (role/resume/video), invite history panel, delete button.
+- **InvitePanel** stays on detail page for invite history + Resend/Revoke actions.
+
+---
+
 ## Session Handoff Template
 
 Paste this at the start of every new Claude Code session:
@@ -536,43 +546,57 @@ Project: HR Assessment Hub (IQ + Personality)
 Read CLAUDE.md first: /Users/VP_1/Desktop/_Claude Code/iq_test/CLAUDE.md
 Active branch: feature/personality-hub
 Last completed phase: Phase 6 — Invite management UI ✅
-Currently working on: Staging test checklist (Phases 4–6) — staging environment is now set up and seeded
-Last thing done: Fixed staging environment — Vercel Preview env vars set, questions SQL fixed and seeded,
-  04_personality_hub.sql created (idempotent) and run on staging. layout.tsx fixed on both branches
-  (graceful fallback in generateMetadata so build doesn't crash if Supabase unreachable).
-  Staging URL: feature/personality-hub Vercel preview deployment.
-  Staging Supabase: separate project from production (ask user for URL if unknown).
-Next task: Work through the full staging test checklist below. Once all pass → Phase 7: PDF export
-  at src/app/api/hr/applicant/[id]/pdf/route.ts and Excel bulk export at src/app/api/hr/export/excel/route.ts.
-Known issues or blockers: none — staging is set up and ready to test
+Currently working on: Staging SQL migrations + staging test checklist — then Phase 7
+Last thing done: Major dashboard UX redesign this session:
+  1. 03_questions.sql rebuilt from production CSV export (245 symbol-based questions, no SVG)
+  2. 04_personality_hub.sql updated — adds applicants.status column (pending_review/reviewed/shortlisted/rejected)
+  3. Single applicant-level status replaces separate IQ + personality statuses
+  4. DashboardTable: Personality badge → Invite button for admin; StatusDropdown now uses applicantId
+  5. /api/hr/status and /api/hr/bulk-status now patch applicants table (not results)
+  6. Applicant detail page is now read-only (no status dropdowns, Review card removed)
+  7. src/types/database.ts updated with new applicants columns
+  Build passes (tsc --noEmit clean, npm run build clean).
+Next task:
+  STEP 1 — Run on staging Supabase SQL Editor (in order):
+    a) supabase/03_questions.sql  (replaces old SVG questions with 245 symbol-based ones)
+    b) supabase/04_personality_hub.sql  (adds applicants.status column — idempotent, safe to re-run)
+  STEP 2 — Push branch → triggers new Vercel preview build
+  STEP 3 — Work through staging test checklist below
+  STEP 4 — Once all checklist items pass → Phase 7: PDF + Excel export
+Known issues or blockers: none — code is built and type-checked, just needs SQL run + deploy
 ```
 
-### Staging test checklist (Phases 4–6)
+### Staging test checklist (updated for new dashboard UX)
 Before starting Phase 7, confirm ALL of these pass on the Vercel preview URL:
 
 **Dashboard table (/hr)**
 - [ ] Personality column visible on large screen (hidden on small/mobile)
-- [ ] Existing applicants show "Not invited" badge in Personality column
-- [ ] Clicking applicant name goes to /hr/applicant/[applicantId] — UUID matches applicants table, not results table
+- [ ] Uninvited applicants: admin sees "Invite" teal button in Personality column
+- [ ] Uninvited applicants: non-admin sees "Not invited" grey badge (no button)
+- [ ] Clicking "Invite" button opens Send Invite modal with correct name/email, 7-day default deadline
+- [ ] Sending invite: success message shown, personality badge updates to "Invited" after modal closes
+- [ ] Invited/In Progress/Completed applicants show correct personality status badge
+- [ ] Status column shows single applicant status (Pending/Reviewed/Shortlisted/Rejected)
+- [ ] Changing status in dropdown saves and persists on reload
+- [ ] Bulk status change updates all selected applicants' status
+- [ ] Clicking applicant name goes to /hr/applicant/[applicantId] — UUID matches applicants table
 
 **Applicant detail page (/hr/applicant/[applicantId])**
 - [ ] Page loads with correct name and email
-- [ ] IQ score card shows correctly
+- [ ] IQ score card shows correctly — no status dropdown on this page
+- [ ] Personality card shows correctly — no status dropdown on this page
 - [ ] "No personality assessment yet" card shows for uninvited applicants
 - [ ] Editable fields (Role, Resume URL, Video URL) — save and persist on reload
 - [ ] Resume/video URL without https:// is rejected (field reverts)
 - [ ] Old result-ID URL redirects to correct applicant-ID URL
 
-**Invite panel (admin login required)**
-- [ ] "Invite History" section visible, shows "No invites sent yet"
-- [ ] "Send Invite" button visible
-- [ ] Modal shows correct recipient name/email, deadline defaults to 7 days, email preview correct
-- [ ] Send invite — success message, email arrives in inbox
-- [ ] Invite history shows new invite with "Pending" badge + email sent timestamp
+**Invite panel on detail page (admin login required)**
+- [ ] "Invite History" section visible, shows "No invites sent yet" for uninvited
+- [ ] "Send Invite" button visible (admin only)
+- [ ] After sending from dashboard, invite history shows in panel with "Pending" badge + email sent timestamp
 - [ ] Revoke changes status to "Revoked", Revoke button disappears
 - [ ] Non-admin login — entire Invite History section is hidden
 
 **Personality result card (requires a completed test session)**
 - [ ] Type card shows: 4-letter code, type name, dimension bars, description, strengths, watch-outs
 - [ ] E-dominant bar fills from left; I-dominant fills from right (all 4 dimensions)
-- [ ] Personality status dropdown saves and persists on reload

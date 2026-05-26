@@ -10,7 +10,16 @@
 alter table applicants
   add column if not exists role_applied_for     text,
   add column if not exists resume_url           text,
-  add column if not exists interview_video_url  text;
+  add column if not exists interview_video_url  text,
+  add column if not exists status               text not null default 'pending_review';
+
+-- Applicant status constraint (skip if already exists)
+do $$ begin
+  alter table applicants
+    add constraint applicants_status_values
+      check (status in ('pending_review', 'reviewed', 'shortlisted', 'rejected'));
+exception when duplicate_object then null;
+end $$;
 
 -- URL validation constraints (skip if already exist)
 do $$ begin

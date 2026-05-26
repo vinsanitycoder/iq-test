@@ -18,13 +18,13 @@ const STATUS_STYLES: Record<string, string> = {
 }
 
 type Props = {
-  resultId: string
+  applicantId: string
   currentStatus: string
   compact?: boolean
   onUpdate?: () => void
 }
 
-export default function StatusDropdown({ resultId, currentStatus, compact, onUpdate }: Props) {
+export default function StatusDropdown({ applicantId, currentStatus, compact, onUpdate }: Props) {
   const router = useRouter()
   const [status, setStatus] = useState(currentStatus)
   const [saving, setSaving] = useState(false)
@@ -35,16 +35,16 @@ export default function StatusDropdown({ resultId, currentStatus, compact, onUpd
     if (next === status || saving) return
     setSaving(true)
     const prev = status
-    setStatus(next) // optimistic
+    setStatus(next)
 
     const res = await fetch('/api/hr/status', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ resultId, status: next }),
+      body: JSON.stringify({ applicantId, status: next }),
     })
 
     if (!res.ok) {
-      setStatus(prev) // roll back
+      setStatus(prev)
     } else if (onUpdate) {
       onUpdate()
     } else {

@@ -11,8 +11,8 @@ export async function GET() {
   const { data, error } = await admin
     .from('results')
     .select(`
-      id, iq_score, iq_label, percentile, status, created_at,
-      applicants (id, first_name, last_name, email),
+      id, iq_score, iq_label, percentile, created_at,
+      applicants (id, first_name, last_name, email, status),
       test_sessions (time_taken_seconds, tab_switches)
     `)
     .order('created_at', { ascending: false })
@@ -74,6 +74,7 @@ export async function GET() {
 
   const enriched = results.map((r: any) => ({
     ...r,
+    status: r.applicants?.status ?? 'pending_review',
     personality_status: personalityStatusMap[r.applicants?.id ?? ''] ?? 'not_invited',
   }))
 
