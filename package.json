@@ -9,11 +9,16 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@react-email/components": "^1.0.12",
+    "@react-email/render": "^2.0.8",
+    "@react-pdf/renderer": "^4.5.1",
     "@supabase/ssr": "0.5.2",
     "@supabase/supabase-js": "2.105.4",
+    "exceljs": "^4.4.0",
     "next": "15.5.18",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "resend": "^6.12.3"
   },
   "devDependencies": {
     "@types/node": "^22",

@@ -11,14 +11,79 @@ export async function GET() {
   const { data, error } = await admin
     .from('results')
     .select(`
-      id, iq_score, iq_label, percentile, status, created_at,
-      applicants (id, first_name, last_name, email),
+      id, iq_score, iq_label, percentile, created_at,
+      applicants (id, first_name, last_name, email, status, role_applied_for, resume_url, interview_video_url, notes),
       test_sessions (time_taken_seconds, tab_switches)
     `)
     .order('created_at', { ascending: false })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ results: data ?? [] }, {
+
+  const results = data ?? []
+  const applicantIds = results
+    .map((r: any) => r.applicants?.id)
+    .filter(Boolean) as string[]
+
+  // Build personality_status and type_code maps for each applicant
+  const personalityStatusMap: Record<string, string> = {}
+  const personalityTypeMap: Record<string, string> = {}
+
+  if (applicantIds.length > 0) {
+    // 1. personality_results — most authoritative (most recent wins per applicant)
+    const { data: prRows } = await admin
+      .from('personality_results' as any)
+      .select('applicant_id, status, type_code')
+      .in('applicant_id', applicantIds)
+      .order('created_at', { ascending: false })
+      .returns<{ applicant_id: string; status: string; type_code: string | null }[]>()
+
+    for (const row of prRows ?? []) {
+      if (!personalityStatusMap[row.applicant_id]) {
+        personalityStatusMap[row.applicant_id] =
+          row.status === 'incomplete' ? 'incomplete' : 'completed'
+        if (row.type_code) personalityTypeMap[row.applicant_id] = row.type_code
+      }
+    }
+
+    // 2. in_progress sessions (for applicants without a result yet)
+    const { data: sessionRows } = await admin
+      .from('personality_sessions' as any)
+      .select('status, invites(applicant_id)')
+      .eq('status', 'in_progress')
+      .returns<{ status: string; invites: { applicant_id: string } | null }[]>()
+
+    for (const row of sessionRows ?? []) {
+      const appId = row.invites?.applicant_id
+      if (appId && !personalityStatusMap[appId]) {
+        personalityStatusMap[appId] = 'in_progress'
+      }
+    }
+
+    // 3. active invites (for applicants without session or result)
+    const { data: inviteRows } = await admin
+      .from('invites' as any)
+      .select('applicant_id, expires_at, status')
+      .in('applicant_id', applicantIds)
+      .neq('status', 'revoked')
+      .returns<{ applicant_id: string; expires_at: string; status: string }[]>()
+
+    for (const row of inviteRows ?? []) {
+      if (!personalityStatusMap[row.applicant_id]) {
+        if (new Date(row.expires_at) > new Date()) {
+          personalityStatusMap[row.applicant_id] = 'invited'
+        }
+      }
+    }
+  }
+
+  const enriched = results.map((r: any) => ({
+    ...r,
+    status: r.applicants?.status ?? 'pending_review',
+    personality_status: personalityStatusMap[r.applicants?.id ?? ''] ?? 'not_invited',
+    personality_type_code: personalityTypeMap[r.applicants?.id ?? ''] ?? null,
+  }))
+
+  return NextResponse.json({ results: enriched }, {
     headers: { 'Cache-Control': 'no-store' },
   })
 }

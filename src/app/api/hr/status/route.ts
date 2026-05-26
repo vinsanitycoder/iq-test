@@ -1,36 +1,25 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
-import type { ResultStatus } from '@/types/database'
+
+const VALID = ['pending_review', 'reviewed', 'shortlisted', 'rejected']
 
 export async function PATCH(request: Request) {
-  // Verify HR session
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const body = await request.json()
-  const { resultId, status } = body as { resultId: string; status: string }
-
-  const validStatuses: ResultStatus[] = ['pending_review', 'reviewed', 'shortlisted', 'rejected']
-  if (!resultId || !validStatuses.includes(status as ResultStatus)) {
+  const { applicantId, status } = await request.json()
+  if (!applicantId || !VALID.includes(status)) {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
   }
 
   const admin = createAdminClient()
   const { error } = await admin
-    .from('results')
-    .update({
-      status: status as ResultStatus,
-      reviewed_at: status !== 'pending_review' ? new Date().toISOString() : null,
-    })
-    .eq('id', resultId)
+    .from('applicants')
+    .update({ status })
+    .eq('id', applicantId)
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
-  }
-
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ ok: true })
 }
