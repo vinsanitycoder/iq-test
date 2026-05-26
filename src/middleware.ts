@@ -53,7 +53,7 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-  ],
+  // Only run middleware on /hr routes — that's the only thing it protects.
+  // Personality/invite routes have their own cookie validation per API route.
+  matcher: ['/hr/:path*'],
 }
