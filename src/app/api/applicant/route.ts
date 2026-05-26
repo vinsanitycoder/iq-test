@@ -23,7 +23,11 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('Applicant insert error:', error)
-      return NextResponse.json({ error: 'Failed to create applicant' }, { status: 500 })
+      // TEMP DIAGNOSTIC — surface Supabase error to caller while we investigate prod failure
+      return NextResponse.json({
+        error: 'Failed to create applicant',
+        debug: { message: error.message, code: error.code, details: error.details, hint: error.hint },
+      }, { status: 500 })
     }
 
     return NextResponse.json({ applicantId: data.id })
