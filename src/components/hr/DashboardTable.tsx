@@ -382,6 +382,8 @@ export default function DashboardTable() {
   const [applyingStatus, setApplyingStatus] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [briefDownloading, setBriefDownloading] = useState(false)
+  const [briefError, setBriefError] = useState('')
   const [inviteTarget, setInviteTarget] = useState<{ id: string; firstName: string; email: string } | null>(null)
   const [editTarget, setEditTarget] = useState<{ id: string; name: string; role: string | null; resume: string | null; video: string | null; notes: string | null } | null>(null)
   const selectAllRef = useRef<HTMLInputElement>(null)
@@ -458,6 +460,47 @@ export default function DashboardTable() {
     }
   }
 
+  async function handleBriefDownload() {
+    if (briefDownloading) return
+    setBriefDownloading(true)
+    setBriefError('')
+    try {
+      const applicantIds = results
+        .filter(r => selected.has(r.id) && r.applicants?.id)
+        .map(r => r.applicants!.id)
+      if (applicantIds.length === 0) {
+        setBriefError('No valid candidates selected.')
+        return
+      }
+      const res = await fetch('/api/hr/applicants/batch-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ applicantIds }),
+      })
+      if (!res.ok) {
+        let msg = 'Could not generate the interview brief.'
+        try { const j = await res.json(); if (j.error) msg = j.error } catch {}
+        setBriefError(msg)
+        return
+      }
+      const blob = await res.blob()
+      const date = new Date().toISOString().split('T')[0]
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `interview-brief-${date}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      // Revoke after a tick so the browser has time to start the download
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
+    } catch {
+      setBriefError('Network error — please try again.')
+    } finally {
+      setBriefDownloading(false)
+    }
+  }
+
   async function handleBulkDelete() {
     setDeleting(true)
     try {
@@ -525,6 +568,18 @@ export default function DashboardTable() {
           </div>
 
           <button
+            onClick={handleBriefDownload}
+            disabled={briefDownloading}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 transition-colors disabled:opacity-40 whitespace-nowrap"
+            title="Generate a one-page interview brief PDF for the selected candidates"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            {briefDownloading ? 'Generating…' : 'Interview Brief PDF'}
+          </button>
+
+          <button
             onClick={() => setShowDeleteModal(true)}
             className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 transition-colors whitespace-nowrap"
           >
@@ -533,6 +588,18 @@ export default function DashboardTable() {
 
           <button onClick={clearSelection} className="text-white/60 hover:text-white transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
+
+      {/* Interview brief error banner */}
+      {briefError && (
+        <div className="mb-3 px-4 py-2.5 rounded-xl bg-red-50 border border-red-200 text-sm font-medium text-red-700 flex items-center justify-between">
+          <span>{briefError}</span>
+          <button onClick={() => setBriefError('')} className="text-red-500 hover:text-red-700 ml-3">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
