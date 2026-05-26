@@ -100,6 +100,42 @@ export default function ImportPage() {
         {/* Column info */}
         {mode === 'insert' ? (
           <div className="bg-white rounded-card shadow-card p-5 mb-5 space-y-4">
+            {/* Template download */}
+            <div className="flex items-start gap-3 p-3 rounded-xl bg-fynlo-bg border border-gray-200">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-fynlo-teal shrink-0 mt-0.5">
+                <path fillRule="evenodd" d="M10 3a.75.75 0 0 1 .75.75v7.69l2.22-2.22a.75.75 0 1 1 1.06 1.06l-3.5 3.5a.75.75 0 0 1-1.06 0l-3.5-3.5a.75.75 0 1 1 1.06-1.06l2.22 2.22V3.75A.75.75 0 0 1 10 3ZM5.75 16a.75.75 0 0 0 0 1.5h8.5a.75.75 0 0 0 0-1.5h-8.5Z" clipRule="evenodd" />
+              </svg>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-fynlo-dark">Not sure about the format?</p>
+                <p className="text-xs text-fynlo-subtle mt-0.5">
+                  Download a blank template with the correct column headers and an example row already filled in.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const csv = [
+                      'First Name,Last Name,Email,Role Applied For,Resume URL,Interview Video URL',
+                      'Jane,Smith,jane.smith@example.com,Software Engineer,https://example.com/resume.pdf,https://example.com/video',
+                    ].join('\r\n')
+                    const blob = new Blob([csv], { type: 'text/csv' })
+                    const url = URL.createObjectURL(blob)
+                    const a = document.createElement('a')
+                    a.href = url
+                    a.download = 'applicants-template.csv'
+                    a.click()
+                    URL.revokeObjectURL(url)
+                  }}
+                  className="inline-flex items-center gap-1.5 mt-2 text-xs font-semibold text-fynlo-teal hover:underline"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
+                    <path d="M8.75 2.75a.75.75 0 0 0-1.5 0v5.69L5.03 6.22a.75.75 0 0 0-1.06 1.06l3.5 3.5a.75.75 0 0 0 1.06 0l3.5-3.5a.75.75 0 0 0-1.06-1.06L8.75 8.44V2.75Z" />
+                    <path d="M3.5 9.75a.75.75 0 0 0-1.5 0v1.5A2.75 2.75 0 0 0 4.75 14h6.5A2.75 2.75 0 0 0 14 11.25v-1.5a.75.75 0 0 0-1.5 0v1.5c0 .69-.56 1.25-1.25 1.25h-6.5c-.69 0-1.25-.56-1.25-1.25v-1.5Z" />
+                  </svg>
+                  Download CSV template
+                </button>
+              </div>
+            </div>
+
             <div>
               <h2 className="text-xs font-bold text-fynlo-subtle uppercase tracking-wide mb-3">Required columns</h2>
               <div className="flex flex-wrap gap-2">
