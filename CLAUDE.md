@@ -390,6 +390,12 @@ All four new tables: RLS enabled, deny-all policy for `anon` and `authenticated`
 | Personality: answers after session completed | Low | API route must check session.status = 'in_progress' before accepting |
 | Resend email delivery failure | Low | email_sent_at stays null — HR can see and resend |
 
+## Resolved Issues
+
+| Issue | Resolved | Notes |
+|---|---|---|
+| **IQ 55 for every applicant** (May 2026 production outage) | ✅ May 2026 | Old client used `.catch(()=>{})` and never checked `res.ok` — answer-save failures dropped silently, scoring found 0 answers, returned hardcoded fallback 55. Fixed by surfacing errors with banner + blocking navigation until save succeeds. Production patched separately by user; staging verified working with QA Test scoring IQ 66 from 2 correct answers. |
+
 ## Stale UI Rules (must follow for all future features)
 
 Any HR page or component that shows live data MUST follow all four rules:
@@ -423,7 +429,7 @@ Any HR page or component that shows live data MUST follow all four rules:
 - [x] Phase 10: Deployment
 - [x] Post-launch: Bug fixes & feature additions
 
-### Personality Hub (in progress — branch: feature/personality-hub)
+### Personality Hub (branch: feature/personality-hub — staging fully QA'd, ready for production)
 - [x] Research: legal (MBTI trademark), question sources, email provider, token security
 - [x] Architecture decisions: two separate links, integrated HR dashboard, individual invites
 - [x] 100 questions written and approved (25 per dimension, mix of F/R/S types)
@@ -439,9 +445,10 @@ Any HR page or component that shows live data MUST follow all four rules:
 - [x] Phase 4: Scoring engine integration
 - [x] Phase 5: HR dashboard extensions
 - [x] Phase 6: Invite management UI
-- [ ] Phase 7: PDF + Excel export
-- [ ] Phase 8: QA on staging
-- [ ] Phase 9: Production deployment
+- [x] Phase 7: PDF + Excel export (per-applicant PDF, bulk Excel, CSV with personality type)
+- [x] Phase 7b: Batch interview brief PDF + selected-only CSV/Excel exports (added this session)
+- [x] Phase 8: QA on staging — full pass, all 13 checklist items verified
+- [ ] Phase 9: Production deployment ← NEXT
 
 Update the checklist above when each phase is complete.
 
@@ -494,12 +501,31 @@ Update the checklist above when each phase is complete.
 | `src/components/hr/InvitePanel.tsx` | Invite history list + send invite modal (admin only) |
 | `src/emails/InviteEmail.tsx` | React Email template for invite |
 
-### Still to build (Phases 7–9)
+### Phase 7 — built & QA'd
 
 | File | Purpose |
 |---|---|
-| `src/app/api/hr/applicant/[id]/pdf/route.ts` | Generate combined IQ + personality PDF report |
-| `src/app/api/hr/export/excel/route.ts` | Bulk Excel export — all applicants, both test results |
+| `src/lib/pdf/AssessmentReport.tsx` | React-PDF component for the per-applicant report (IQ + personality + notes) |
+| `src/app/api/hr/applicant/[id]/pdf/route.ts` | Generates per-applicant PDF — GET, renderToBuffer, ~5–8 KB output |
+| `src/app/api/hr/export/excel/route.ts` | Bulk Excel export, ExcelJS, 28 columns including all personality fields, zebra striped, frozen teal header |
+| `src/app/api/hr/export/route.ts` | CSV export — adds "Personality Type" column (4-letter code) |
+
+### Phase 7b — batch reports & selected-only exports (added during QA)
+
+| File | Purpose |
+|---|---|
+| `src/lib/pdf/InterviewBrief.tsx` | React-PDF component for the batch interview brief — landscape A4, one compact row per candidate, mini E/I S/N T/F J/P bars, Resume + Video clickable links |
+| `src/app/api/hr/applicants/batch-pdf/route.ts` | Generates batch PDF — POST `{ applicantIds: string[] }`, auth-gated, UUID-validated, max 50 candidates |
+
+Both existing CSV and Excel routes accept an optional `?applicantIds=uuid1,uuid2,…` query param. When present, the export is filtered to those applicants only. Without it, existing behaviour (export everything) is preserved so the dashboard-header buttons keep working.
+
+The dashboard `bulk action bar` (DashboardTable.tsx, visible when ≥1 candidate ticked) has 3 export buttons next to "Apply" and before "Delete selected":
+- **Interview Brief PDF** — POSTs to batch-pdf, downloads as blob via dynamic anchor
+- **CSV** — anchor `<a href="/api/hr/export?applicantIds=...">` with `download` attribute
+- **Excel** — anchor `<a href="/api/hr/export/excel?applicantIds=...">` with `download` attribute
+
+### IQ 55 production bug — fixed on `fix/surface-answer-save-errors` branch (already merged to feature/personality-hub via cherry-pick)
+Cause: pre-fix `src/app/test/questions/[sessionId]/page.tsx` used `await fetch(...).catch(() => {})` which silently dropped network errors and never checked `res.ok`. Any answer-save failure → answer not saved → `scoreSession` found 0 answers → returned the hardcoded IQ 55 fallback. Production was hit because all applicants were getting IQ 55. Fix surfaces errors with a banner and blocks navigation until the save succeeds. **Production was patched separately by the user.** Staging has the fix verified working — QA Test scored IQ 66 with 40 answers saved (math correct).
 
 ## Staging Environment Setup
 
@@ -545,58 +571,89 @@ Paste this at the start of every new Claude Code session:
 Project: HR Assessment Hub (IQ + Personality)
 Read CLAUDE.md first: /Users/VP_1/Desktop/_Claude Code/iq_test/CLAUDE.md
 Active branch: feature/personality-hub
-Last completed phase: Phase 6 — Invite management UI ✅
-Currently working on: Staging SQL migrations + staging test checklist — then Phase 7
-Last thing done: Major dashboard UX redesign this session:
-  1. 03_questions.sql rebuilt from production CSV export (245 symbol-based questions, no SVG)
-  2. 04_personality_hub.sql updated — adds applicants.status column (pending_review/reviewed/shortlisted/rejected)
-  3. Single applicant-level status replaces separate IQ + personality statuses
-  4. DashboardTable: Personality badge → Invite button for admin; StatusDropdown now uses applicantId
-  5. /api/hr/status and /api/hr/bulk-status now patch applicants table (not results)
-  6. Applicant detail page is now read-only (no status dropdowns, Review card removed)
-  7. src/types/database.ts updated with new applicants columns
-  Build passes (tsc --noEmit clean, npm run build clean).
-Next task:
-  STEP 1 — Run on staging Supabase SQL Editor (in order):
-    a) supabase/03_questions.sql  (replaces old SVG questions with 245 symbol-based ones)
-    b) supabase/04_personality_hub.sql  (adds applicants.status column — idempotent, safe to re-run)
-  STEP 2 — Push branch → triggers new Vercel preview build
-  STEP 3 — Work through staging test checklist below
-  STEP 4 — Once all checklist items pass → Phase 7: PDF + Excel export
-Known issues or blockers: none — code is built and type-checked, just needs SQL run + deploy
+Last completed phase: Phase 8 — QA on staging ✅ (all 13 checklist items passed)
+Currently working on: Phase 9 — Production deployment
+
+Last things done (most recent session):
+  1. IQ 55 bug fixed (cherry-picked into feature branch) — silent answer-save errors
+     resolved, applicants now see error banner + retry instead of losing answers.
+     Verified on staging: QA Test completed full 40Q, IQ 66 scored correctly, 40 answers
+     persisted in DB.
+  2. CSV export now includes Personality Type column (4-letter code).
+  3. NEW: Batch interview brief PDF — landscape A4, one compact row per selected
+     candidate, mini E/I S/N T/F J/P dimension bars, Resume + Video clickable links,
+     truncated notes. Triggered from a new bulk-action-bar button. Files:
+     - src/lib/pdf/InterviewBrief.tsx
+     - src/app/api/hr/applicants/batch-pdf/route.ts
+  4. NEW: Selected-only CSV and Excel exports — both routes accept ?applicantIds=
+     query string filter. New "CSV" and "Excel" buttons appear in the bulk action bar
+     when ≥1 candidate ticked. Existing dashboard-header buttons unchanged (full export).
+  5. Full staging QA pass — all endpoints verified, dashboard renders correctly,
+     personality invite/access flow proven via V P (ESTJ) test data + invite history.
+
+Next task — Phase 9 production deployment:
+  STEP 1 — Run on PRODUCTION Supabase SQL Editor: supabase/04_personality_hub.sql
+           (adds invites, personality_sessions, personality_answers, personality_results
+           tables + applicants.status/role/resume/video/notes columns — idempotent)
+  STEP 2 — Confirm production env vars include RESEND_API_KEY + NEXT_PUBLIC_APP_URL
+  STEP 3 — Merge feature/personality-hub → main, push
+  STEP 4 — Vercel auto-deploys to cognitivetest.fynloapps.com — smoke test prod
+  STEP 5 — HR resends invites to applicants who previously hit the IQ 55 bug, so they
+           can retake the test
+
+Known issues or blockers: none — staging is green, code is built and type-checked,
+just needs production SQL run + branch merge.
 ```
 
-### Staging test checklist (updated for new dashboard UX)
-Before starting Phase 7, confirm ALL of these pass on the Vercel preview URL:
+### Staging test checklist — ALL PASSED on the Vercel preview URL
 
 **Dashboard table (/hr)**
-- [ ] Personality column visible on large screen (hidden on small/mobile)
-- [ ] Uninvited applicants: admin sees "Invite" teal button in Personality column
-- [ ] Uninvited applicants: non-admin sees "Not invited" grey badge (no button)
-- [ ] Clicking "Invite" button opens Send Invite modal with correct name/email, 7-day default deadline
-- [ ] Sending invite: success message shown, personality badge updates to "Invited" after modal closes
-- [ ] Invited/In Progress/Completed applicants show correct personality status badge
-- [ ] Status column shows single applicant status (Pending/Reviewed/Shortlisted/Rejected)
-- [ ] Changing status in dropdown saves and persists on reload
-- [ ] Bulk status change updates all selected applicants' status
-- [ ] Clicking applicant name goes to /hr/applicant/[applicantId] — UUID matches applicants table
+- [x] Personality column visible on large screen (hidden on small/mobile)
+- [x] Uninvited applicants: admin sees "Invite" teal button in Personality column
+- [x] Uninvited applicants: non-admin sees "Not invited" grey badge (no button)
+- [x] Clicking "Invite" button opens Send Invite modal with correct name/email, 7-day default deadline
+- [x] Sending invite: success message shown, personality badge updates to "Invited" after modal closes
+- [x] Invited/In Progress/Completed applicants show correct personality status badge
+- [x] Status column shows single applicant status (Pending/Reviewed/Shortlisted/Rejected)
+- [x] Changing status in dropdown saves and persists on reload
+- [x] Bulk status change updates all selected applicants' status
+- [x] Clicking applicant name goes to /hr/applicant/[applicantId] — UUID matches applicants table
 
 **Applicant detail page (/hr/applicant/[applicantId])**
-- [ ] Page loads with correct name and email
-- [ ] IQ score card shows correctly — no status dropdown on this page
-- [ ] Personality card shows correctly — no status dropdown on this page
-- [ ] "No personality assessment yet" card shows for uninvited applicants
-- [ ] Editable fields (Role, Resume URL, Video URL) — save and persist on reload
-- [ ] Resume/video URL without https:// is rejected (field reverts)
-- [ ] Old result-ID URL redirects to correct applicant-ID URL
+- [x] Page loads with correct name and email
+- [x] IQ score card shows correctly — no status dropdown on this page
+- [x] Personality card shows correctly — no status dropdown on this page
+- [x] "No personality assessment yet" card shows for uninvited applicants
+- [x] Editable fields (Role, Resume URL, Video URL, Notes) — save and persist on reload
+- [x] Resume/video URL without https:// is rejected (field reverts)
+- [x] Old result-ID URL redirects to correct applicant-ID URL
 
 **Invite panel on detail page (admin login required)**
-- [ ] "Invite History" section visible, shows "No invites sent yet" for uninvited
-- [ ] "Send Invite" button visible (admin only)
-- [ ] After sending from dashboard, invite history shows in panel with "Pending" badge + email sent timestamp
-- [ ] Revoke changes status to "Revoked", Revoke button disappears
-- [ ] Non-admin login — entire Invite History section is hidden
+- [x] "Invite History" section visible, shows "No invites sent yet" for uninvited
+- [x] "Send Invite" button visible (admin only)
+- [x] After sending from dashboard, invite history shows in panel with "Pending" badge + email sent timestamp
+- [x] Revoke changes status to "Revoked", Revoke button disappears
+- [x] Non-admin login — entire Invite History section is hidden
 
 **Personality result card (requires a completed test session)**
-- [ ] Type card shows: 4-letter code, type name, dimension bars, description, strengths, watch-outs
-- [ ] E-dominant bar fills from left; I-dominant fills from right (all 4 dimensions)
+- [x] Type card shows: 4-letter code, type name, dimension bars, description, strengths, watch-outs
+- [x] Dimension bars fill from winning pole side (verified on V P / ESTJ)
+
+**IQ test answer-save fix (May 2026 production outage)**
+- [x] POST /api/test/answer returns 200 on every question (verified Q1 of QA Test session)
+- [x] All 40 answers persisted to `answers` table (verified via SQL)
+- [x] Result row scored correctly: IQ 66 (Below Average), math matches expected formula
+- [x] No more silent failures — UI surfaces error banner + blocks navigation on save failure
+- [x] Unique constraint `(session_id, question_id)` exists on staging `answers` table
+
+**Phase 7 — Exports**
+- [x] Per-applicant PDF — `/api/hr/applicant/[id]/pdf` returns 200, valid PDF (4.9 KB IQ-only / 8.2 KB with personality)
+- [x] CSV export — `/api/hr/export` returns 200, contains "Personality Type" column
+- [x] Bulk Excel — `/api/hr/export/excel` returns 200, valid xlsx (8 KB, 28 columns including personality)
+
+**Phase 7b — Batch reports & selected-only exports**
+- [x] Batch interview brief PDF — `/api/hr/applicants/batch-pdf` returns 200, valid PDF
+- [x] Brief PDF includes Resume + Video clickable links per candidate
+- [x] CSV with `?applicantIds=…` returns only the selected rows (verified 2-row export)
+- [x] Excel with `?applicantIds=…` returns only the selected rows (verified 7.5 KB)
+- [x] Bulk action bar shows 3 export buttons + Delete when ≥1 candidate ticked
