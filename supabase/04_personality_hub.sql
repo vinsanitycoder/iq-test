@@ -1,5 +1,5 @@
 -- ============================================================
--- Personality Hub Schema Migration
+-- Personality Hub Schema Migration (idempotent — safe to re-run)
 -- Run AFTER 01_schema.sql, 02_rls.sql, 03_questions.sql
 -- Adds: invites, personality_sessions, personality_answers, personality_results
 -- Plus 3 new nullable columns on applicants
@@ -12,16 +12,24 @@ alter table applicants
   add column if not exists resume_url           text,
   add column if not exists interview_video_url  text;
 
--- URL validation for resume_url and interview_video_url
-alter table applicants
-  add constraint applicants_resume_url_format
-    check (resume_url is null or resume_url ~* '^https?://'),
-  add constraint applicants_interview_video_url_format
-    check (interview_video_url is null or interview_video_url ~* '^https?://');
+-- URL validation constraints (skip if already exist)
+do $$ begin
+  alter table applicants
+    add constraint applicants_resume_url_format
+      check (resume_url is null or resume_url ~* '^https?://');
+exception when duplicate_object then null;
+end $$;
+
+do $$ begin
+  alter table applicants
+    add constraint applicants_interview_video_url_format
+      check (interview_video_url is null or interview_video_url ~* '^https?://');
+exception when duplicate_object then null;
+end $$;
 
 -- ── invites ──────────────────────────────────────────────────
 
-create table invites (
+create table if not exists invites (
   id                  uuid primary key default uuid_generate_v4(),
   applicant_id        uuid not null references applicants(id) on delete cascade,
   token_hash          text not null unique,
@@ -35,11 +43,11 @@ create table invites (
   constraint invites_expires_after_created check (expires_at > created_at)
 );
 
-create index idx_invites_applicant_id on invites(applicant_id);
+create index if not exists idx_invites_applicant_id on invites(applicant_id);
 
 -- ── personality_sessions ─────────────────────────────────────
 
-create table personality_sessions (
+create table if not exists personality_sessions (
   id            uuid primary key default uuid_generate_v4(),
   invite_id     uuid not null unique references invites(id) on delete cascade,
   start_time    timestamptz,
@@ -56,7 +64,7 @@ create table personality_sessions (
            or extract(epoch from (end_time - start_time)) <= 2760)
 );
 
-create index idx_personality_sessions_invite_id on personality_sessions(invite_id);
+create index if not exists idx_personality_sessions_invite_id on personality_sessions(invite_id);
 
 -- updated_at trigger for personality_sessions
 create or replace function update_personality_sessions_updated_at()
@@ -67,13 +75,14 @@ begin
 end;
 $$ language plpgsql;
 
+drop trigger if exists personality_sessions_updated_at on personality_sessions;
 create trigger personality_sessions_updated_at
   before update on personality_sessions
   for each row execute function update_personality_sessions_updated_at();
 
 -- ── personality_answers ──────────────────────────────────────
 
-create table personality_answers (
+create table if not exists personality_answers (
   id              uuid primary key default uuid_generate_v4(),
   session_id      uuid not null references personality_sessions(id) on delete cascade,
   question_index  integer not null check (question_index between 0 and 99),
@@ -86,7 +95,7 @@ create table personality_answers (
 
 -- ── personality_results ──────────────────────────────────────
 
-create table personality_results (
+create table if not exists personality_results (
   id                          uuid primary key default uuid_generate_v4(),
   session_id                  uuid not null unique references personality_sessions(id) on delete cascade,
   applicant_id                uuid not null references applicants(id) on delete cascade,
@@ -116,7 +125,7 @@ create table personality_results (
            or (status in ('pending_review', 'incomplete') and reviewed_at is null))
 );
 
-create index idx_personality_results_applicant_id on personality_results(applicant_id);
+create index if not exists idx_personality_results_applicant_id on personality_results(applicant_id);
 
 -- updated_at trigger for personality_results
 create or replace function update_personality_results_updated_at()
@@ -127,30 +136,44 @@ begin
 end;
 $$ language plpgsql;
 
+drop trigger if exists personality_results_updated_at on personality_results;
 create trigger personality_results_updated_at
   before update on personality_results
   for each row execute function update_personality_results_updated_at();
 
 -- ── RLS: deny-all for anon/authenticated on all four new tables ──
 -- Service role (used in API routes) bypasses RLS
+-- ALTER TABLE ... ENABLE ROW LEVEL SECURITY is idempotent
 
 alter table invites              enable row level security;
 alter table personality_sessions enable row level security;
 alter table personality_answers  enable row level security;
 alter table personality_results  enable row level security;
 
-create policy "invites: deny all"
-  on invites for all to anon, authenticated
-  using (false) with check (false);
+do $$ begin
+  create policy "invites: deny all"
+    on invites for all to anon, authenticated
+    using (false) with check (false);
+exception when duplicate_object then null;
+end $$;
 
-create policy "personality_sessions: deny all"
-  on personality_sessions for all to anon, authenticated
-  using (false) with check (false);
+do $$ begin
+  create policy "personality_sessions: deny all"
+    on personality_sessions for all to anon, authenticated
+    using (false) with check (false);
+exception when duplicate_object then null;
+end $$;
 
-create policy "personality_answers: deny all"
-  on personality_answers for all to anon, authenticated
-  using (false) with check (false);
+do $$ begin
+  create policy "personality_answers: deny all"
+    on personality_answers for all to anon, authenticated
+    using (false) with check (false);
+exception when duplicate_object then null;
+end $$;
 
-create policy "personality_results: deny all"
-  on personality_results for all to anon, authenticated
-  using (false) with check (false);
+do $$ begin
+  create policy "personality_results: deny all"
+    on personality_results for all to anon, authenticated
+    using (false) with check (false);
+exception when duplicate_object then null;
+end $$;
