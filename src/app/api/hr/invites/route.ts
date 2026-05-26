@@ -15,10 +15,12 @@ async function requireAdmin() {
   return user
 }
 
-function getAppUrl(): string {
-  const url = process.env.NEXT_PUBLIC_APP_URL
-  if (!url) throw new Error('NEXT_PUBLIC_APP_URL is not set')
-  return url.replace(/\/$/, '')
+function getAppUrl(req: NextRequest): string {
+  // Derive base URL from the request itself so invite links always point
+  // to the server that sent them — no env var needed, staging-safe.
+  const proto = req.headers.get('x-forwarded-proto') ?? 'https'
+  const host = req.headers.get('host') ?? req.nextUrl.host
+  return `${proto}://${host}`
 }
 
 function formatDeadline(iso: string): string {
@@ -106,7 +108,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Build the invite URL and email
-  const inviteUrl = `${getAppUrl()}/invite/${rawToken}`
+  const inviteUrl = `${getAppUrl(req)}/invite/${rawToken}`
   const html = await render(
     InviteEmail({
       applicantFirstName: applicant.first_name ?? 'there',
