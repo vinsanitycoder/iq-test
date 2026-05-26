@@ -1,6 +1,8 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 type ExportRow = {
   iq_score: number
@@ -28,15 +30,21 @@ function escapeCSV(value: string | number | null | undefined): string {
   return `"${str.replace(/"/g, '""')}"`
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  // Optional filter: ?applicantIds=uuid1,uuid2,uuid3 — used by "Export selected" buttons
+  const filterIdsRaw = req.nextUrl.searchParams.get('applicantIds')
+  const filterIds = filterIdsRaw
+    ? filterIdsRaw.split(',').map(s => s.trim()).filter(s => UUID_RE.test(s))
+    : null
+
   const admin = createAdminClient()
-  const { data, error } = await admin
+  let query = admin
     .from('results')
     .select(`
       iq_score, iq_label, percentile, raw_score, weighted_score, created_at,
@@ -44,6 +52,12 @@ export async function GET() {
       test_sessions (time_taken_seconds, tab_switches)
     `)
     .order('created_at', { ascending: false })
+
+  if (filterIds && filterIds.length > 0) {
+    query = query.in('applicant_id', filterIds)
+  }
+
+  const { data, error } = await query
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })

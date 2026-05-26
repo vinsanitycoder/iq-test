@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import ExcelJS from 'exceljs'
@@ -10,16 +10,23 @@ export const dynamic = 'force-dynamic'
 // ── Teal brand colour for the header row
 const TEAL_ARGB = 'FF0084AD'
 const WHITE_ARGB = 'FFFFFFFF'
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  // Optional filter: ?applicantIds=uuid1,uuid2,uuid3 — used by "Export selected" buttons
+  const filterIdsRaw = req.nextUrl.searchParams.get('applicantIds')
+  const filterIds = filterIdsRaw
+    ? filterIdsRaw.split(',').map(s => s.trim()).filter(s => UUID_RE.test(s))
+    : null
+
   const admin = createAdminClient()
 
   // ── IQ results ────────────────────────────────────────────────────────────
-  const { data: iqData, error: iqError } = await admin
+  let iqQuery = admin
     .from('results')
     .select(`
       iq_score, iq_label, percentile, raw_score, weighted_score, created_at,
@@ -27,6 +34,12 @@ export async function GET() {
       test_sessions (time_taken_seconds, tab_switches)
     `)
     .order('created_at', { ascending: false })
+
+  if (filterIds && filterIds.length > 0) {
+    iqQuery = iqQuery.in('applicant_id', filterIds)
+  }
+
+  const { data: iqData, error: iqError } = await iqQuery
 
   if (iqError) return NextResponse.json({ error: iqError.message }, { status: 500 })
 
