@@ -22,6 +22,7 @@ type DashboardRow = {
     role_applied_for: string | null
     resume_url: string | null
     interview_video_url: string | null
+    notes: string | null
   } | null
   test_sessions: { time_taken_seconds: number | null; tab_switches: number } | null
 }
@@ -233,6 +234,7 @@ function QuickEditModal({
   initialRole,
   initialResume,
   initialVideo,
+  initialNotes,
   onClose,
   onSaved,
 }: {
@@ -241,12 +243,14 @@ function QuickEditModal({
   initialRole: string | null
   initialResume: string | null
   initialVideo: string | null
+  initialNotes: string | null
   onClose: () => void
   onSaved: () => void
 }) {
   const [role, setRole] = useState(initialRole ?? '')
   const [resume, setResume] = useState(initialResume ?? '')
   const [video, setVideo] = useState(initialVideo ?? '')
+  const [notes, setNotes] = useState(initialNotes ?? '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -268,6 +272,7 @@ function QuickEditModal({
         role_applied_for: role.trim() || null,
         resume_url: resume.trim() || null,
         interview_video_url: video.trim() || null,
+        notes: notes.trim() || null,
       }),
     })
     if (!res.ok) {
@@ -330,6 +335,17 @@ function QuickEditModal({
               className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-fynlo-teal/40 disabled:opacity-50"
             />
           </div>
+          <div>
+            <label className="block text-xs font-semibold text-fynlo-subtle uppercase tracking-wide mb-1">Notes</label>
+            <textarea
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              disabled={saving}
+              rows={3}
+              placeholder="Internal notes about this applicant…"
+              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-fynlo-teal/40 disabled:opacity-50 resize-y"
+            />
+          </div>
         </div>
 
         {error && (
@@ -366,7 +382,7 @@ export default function DashboardTable() {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [inviteTarget, setInviteTarget] = useState<{ id: string; firstName: string; email: string } | null>(null)
-  const [editTarget, setEditTarget] = useState<{ id: string; name: string; role: string | null; resume: string | null; video: string | null } | null>(null)
+  const [editTarget, setEditTarget] = useState<{ id: string; name: string; role: string | null; resume: string | null; video: string | null; notes: string | null } | null>(null)
   const selectAllRef = useRef<HTMLInputElement>(null)
 
   const load = useCallback(async () => {
@@ -623,6 +639,7 @@ export default function DashboardTable() {
                             role: applicant?.role_applied_for ?? null,
                             resume: applicant?.resume_url ?? null,
                             video: applicant?.interview_video_url ?? null,
+                            notes: applicant?.notes ?? null,
                           })}
                           title="Edit applicant details"
                           className="p-1 rounded-lg text-fynlo-subtle hover:text-fynlo-teal hover:bg-gray-100 transition-colors"
@@ -661,6 +678,7 @@ export default function DashboardTable() {
           initialRole={editTarget.role}
           initialResume={editTarget.resume}
           initialVideo={editTarget.video}
+          initialNotes={editTarget.notes}
           onClose={() => setEditTarget(null)}
           onSaved={() => { load(); setEditTarget(null) }}
         />

@@ -12,7 +12,7 @@ export async function GET() {
     .from('results')
     .select(`
       id, iq_score, iq_label, percentile, created_at,
-      applicants (id, first_name, last_name, email, status, role_applied_for, resume_url, interview_video_url),
+      applicants (id, first_name, last_name, email, status, role_applied_for, resume_url, interview_video_url, notes),
       test_sessions (time_taken_seconds, tab_switches)
     `)
     .order('created_at', { ascending: false })
