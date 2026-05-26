@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
   // ── Applicants ──
   const { data: applicants, error: aErr } = await admin
     .from('applicants' as never)
-    .select('id, first_name, last_name, email, role_applied_for, notes')
+    .select('id, first_name, last_name, email, role_applied_for, resume_url, interview_video_url, notes')
     .in('id', ids)
     .returns<{
       id: string
@@ -58,6 +58,8 @@ export async function POST(req: NextRequest) {
       last_name: string
       email: string
       role_applied_for: string | null
+      resume_url: string | null
+      interview_video_url: string | null
       notes: string | null
     }[]>()
 
@@ -135,6 +137,8 @@ export async function POST(req: NextRequest) {
       last_name: a.last_name,
       email: a.email,
       role_applied_for: a.role_applied_for,
+      resume_url: a.resume_url,
+      interview_video_url: a.interview_video_url,
       notes: a.notes,
     },
     iq: iqByApplicant[a.id] ?? null,

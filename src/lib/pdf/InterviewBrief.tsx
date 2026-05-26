@@ -13,6 +13,7 @@ import {
   Page,
   View,
   Text,
+  Link,
   StyleSheet,
 } from '@react-pdf/renderer'
 import { PERSONALITY_TYPES } from '@/lib/personality/types'
@@ -99,6 +100,22 @@ const s = StyleSheet.create({
   },
   candidateRole: {
     color: SUBTLE,
+    fontSize: 7,
+    marginBottom: 3,
+  },
+  linkRow: {
+    flexDirection: 'row',
+    gap: 6,
+    marginTop: 1,
+  },
+  candidateLink: {
+    color: TEAL,
+    fontSize: 7,
+    fontFamily: 'Helvetica-Bold',
+    textDecoration: 'underline',
+  },
+  linkPlaceholder: {
+    color: BORDER,
     fontSize: 7,
   },
 
@@ -268,6 +285,8 @@ export type BriefCandidate = {
     last_name: string
     email: string
     role_applied_for: string | null
+    resume_url: string | null
+    interview_video_url: string | null
     notes: string | null
   }
   iq: {
@@ -341,6 +360,18 @@ function CandidateRow({ c }: { c: BriefCandidate }) {
         <Text style={s.candidateRole}>
           {c.applicant.role_applied_for ?? 'No role specified'}
         </Text>
+        <View style={s.linkRow}>
+          {c.applicant.resume_url ? (
+            <Link src={c.applicant.resume_url} style={s.candidateLink}>Resume ↗</Link>
+          ) : (
+            <Text style={s.linkPlaceholder}>Resume —</Text>
+          )}
+          {c.applicant.interview_video_url ? (
+            <Link src={c.applicant.interview_video_url} style={s.candidateLink}>Video ↗</Link>
+          ) : (
+            <Text style={s.linkPlaceholder}>Video —</Text>
+          )}
+        </View>
       </View>
 
       {/* IQ */}
