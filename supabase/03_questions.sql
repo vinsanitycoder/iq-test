@@ -22,7 +22,7 @@ INSERT INTO questions (type, difficulty, question_text, option_a, option_b, opti
 ('numerical', 'easy', 'If you have £100 and spend £35, how much remains?', '£55', '£65', '£75', '£85', 'b', false, true),
 ('numerical', 'easy', 'What is 10% of 250?', '20', '25', '30', '35', 'b', false, true),
 ('numerical', 'easy', 'A person walks 2km, then 3km, then 1km. Total distance?', '5km', '6km', '7km', '8km', 'b', false, true),
-('numerical', 'easy', 'If a shirt costs £25 and you buy 2, what is the total?', '£40', '£45', '£50', '£55', 'c', false, true),
+('numerical', 'easy', 'If a shirt costs £25 and you buy 2, what is the total?', '£40', '£45', '£50', '£55', 'c', false, true);
 
 -- ── NUMERICAL REASONING: MEDIUM (17 questions) ───────────────
 
@@ -43,7 +43,7 @@ INSERT INTO questions (type, difficulty, question_text, option_a, option_b, opti
 ('numerical', 'medium', 'A recipe serves 4. To serve 10 people, by what factor should you multiply ingredients?', '1.5', '2', '2.5', '3', 'c', false, true),
 ('numerical', 'medium', 'If 60% of students passed, and 180 passed, how many students total?', '250', '280', '300', '350', 'c', false, true),
 ('numerical', 'medium', 'A phone costs 3 times more than a tablet. The tablet is £200. Total cost for both?', '£600', '£700', '£800', '£900', 'c', false, true),
-('numerical', 'medium', 'If 2/3 of a number is 48, what is the number?', '60', '66', '72', '80', 'c', false, true),
+('numerical', 'medium', 'If 2/3 of a number is 48, what is the number?', '60', '66', '72', '80', 'c', false, true);
 
 -- ── NUMERICAL REASONING: HARD (16 questions) ──────────────────
 
@@ -84,7 +84,7 @@ INSERT INTO questions (type, difficulty, question_text, option_a, option_b, opti
 ('logical_sequence', 'easy', '1, 2, 3, 4, 5, ?', '6', '7', '8', '9', 'a', false, true),
 ('logical_sequence', 'easy', '11, 22, 33, 44, ?', '50', '55', '56', '60', 'b', false, true),
 ('logical_sequence', 'easy', '5, 5, 10, 15, 25, ?', '40', '45', '50', '55', 'a', false, true),
-('logical_sequence', 'easy', '12, 10, 8, 6, ?', '3', '4', '5', '6', 'c', false, true),
+('logical_sequence', 'easy', '12, 10, 8, 6, ?', '3', '4', '5', '6', 'c', false, true);
 
 -- ── LOGICAL SEQUENCES: MEDIUM (17 questions) ──────────────────
 
@@ -105,7 +105,7 @@ INSERT INTO questions (type, difficulty, question_text, option_a, option_b, opti
 ('logical_sequence', 'medium', '2, 5, 11, 23, 47, ?', '89', '90', '95', '96', 'd', false, true),
 ('logical_sequence', 'medium', '4, 8, 12, 20, 32, ?', '48', '50', '52', '54', 'c', false, true),
 ('logical_sequence', 'medium', '1, 1, 2, 3, 5, 8, ?', '12', '13', '14', '15', 'b', false, true),
-('logical_sequence', 'medium', '10, 11, 13, 16, 20, ?', '24', '25', '26', '28', 'b', false, true),
+('logical_sequence', 'medium', '10, 11, 13, 16, 20, ?', '24', '25', '26', '28', 'b', false, true);
 
 -- ── LOGICAL SEQUENCES: HARD (16 questions) ───────────────────
 
@@ -142,7 +142,7 @@ INSERT INTO questions (type, difficulty, question_text, option_a, option_b, opti
 ('pattern_recognition', 'easy', 'What completes the symmetry?', 'Mirror on right', 'Mirror on left', 'Rotate 90°', 'Flip vertically', 'a', '<svg viewBox="0 0 200 50" xmlns="http://www.w3.org/2000/svg"><line x1="100" y1="10" x2="100" y2="40" stroke="#999" stroke-width="1" stroke-dasharray="2,2"/><polygon points="50,20 50,30 75,25" fill="#0084AD"/><polygon points="150,20 150,30 125,25" fill="white" stroke="#999"/></svg>', false, true),
 ('pattern_recognition', 'easy', 'Which shape appears 3 times?', 'Circle', 'Square', 'Triangle', 'Pentagon', 'c', '<svg viewBox="0 0 200 50" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="25" r="6" fill="#0084AD"/><polygon points="35,18 45,18 40,32" fill="#0084AD"/><polygon points="58,18 68,18 63,32" fill="#0084AD"/><polygon points="81,18 91,18 86,32" fill="#0084AD"/><circle cx="110" cy="25" r="6" fill="#0084AD"/></svg>', false, true),
 ('pattern_recognition', 'easy', 'What number of dots comes next?', '4 dots', '5 dots', '6 dots', '7 dots', 'c', '<svg viewBox="0 0 200 50" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="25" r="3" fill="#0084AD"/><circle cx="25" cy="25" r="3" fill="#0084AD"/><circle cx="25" cy="25" r="3" fill="#0084AD"/><circle cx="40" cy="20" r="3" fill="#0084AD"/><circle cx="40" cy="30" r="3" fill="#0084AD"/><circle cx="55" cy="15" r="3" fill="#0084AD"/><circle cx="55" cy="25" r="3" fill="#0084AD"/><circle cx="55" cy="35" r="3" fill="#0084AD"/><text x="150" y="30" font-size="12" fill="#4A6572">?</text></svg>', false, true),
-('pattern_recognition', 'easy', 'How does the pattern progress?', 'By color', 'By size', 'By rotation', 'By position', 'a', '<svg viewBox="0 0 200 50" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="17" width="16" height="16" fill="#0084AD"/><rect x="25" y="17" width="16" height="16" fill="#BC3F1D"/><rect x="45" y="17" width="16" height="16" fill="#0084AD"/><rect x="65" y="17" width="16" height="16" fill="#BC3F1D"/><text x="150" y="30" font-size="12" fill="#4A6572">?</text></svg>', false, true),
+('pattern_recognition', 'easy', 'How does the pattern progress?', 'By color', 'By size', 'By rotation', 'By position', 'a', '<svg viewBox="0 0 200 50" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="17" width="16" height="16" fill="#0084AD"/><rect x="25" y="17" width="16" height="16" fill="#BC3F1D"/><rect x="45" y="17" width="16" height="16" fill="#0084AD"/><rect x="65" y="17" width="16" height="16" fill="#BC3F1D"/><text x="150" y="30" font-size="12" fill="#4A6572">?</text></svg>', false, true);
 
 -- ── PATTERN RECOGNITION: MEDIUM (12 questions) ──────────────
 
@@ -173,7 +173,7 @@ INSERT INTO questions (type, difficulty, question_text, option_a, option_b, opti
 ('pattern_recognition', 'hard', 'Which satisfies the mathematical relationship?', 'Ratio 1:1', 'Ratio 1:2', 'Ratio 2:3', 'Ratio 3:5', 'd', '<svg viewBox="0 0 200 50" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="25" r="3" fill="#0084AD"/><circle cx="20" cy="25" r="4" fill="#0084AD"/><circle cx="30" cy="25" r="6" fill="#0084AD"/><circle cx="43" cy="25" r="9" fill="#0084AD"/><circle cx="60" cy="25" r="14" fill="#0084AD"/><text x="155" y="30" font-size="12" fill="#4A6572">?</text></svg>', false, true),
 ('pattern_recognition', 'hard', 'What dual transformation applies?', 'Rotation + Size', 'Rotation + Color', 'Color + Position', 'Size + Position', 'c', '<svg viewBox="0 0 200 50" xmlns="http://www.w3.org/2000/svg"><polygon points="15,20 20,20 17.5,28" fill="#0084AD"/><polygon points="32,22 40,22 36,32" fill="#BC3F1D"/><polygon points="55,18 68,18 61.5,32" fill="#0084AD"/><polygon points="80,24 95,24 87.5,36" fill="#BC3F1D"/><text x="155" y="30" font-size="12" fill="#4A6572">?</text></svg>', false, true),
 ('pattern_recognition', 'hard', 'Which element breaks the pattern rule?', 'Element 1', 'Element 2', 'Element 3', 'Element 4', 'b', '<svg viewBox="0 0 200 50" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="25" r="4" fill="#0084AD"/><circle cx="28" cy="25" r="4" fill="#0084AD"/><circle cx="44" cy="25" r="4" fill="#BC3F1D"/><circle cx="60" cy="25" r="4" fill="#0084AD"/><circle cx="76" cy="25" r="4" fill="#0084AD"/><circle cx="92" cy="25" r="4" fill="#0084AD"/><text x="155" y="30" font-size="12" fill="#4A6572">?</text></svg>', false, true),
-('pattern_recognition', 'hard', 'What is the hidden pattern complexity?', 'Level 1', 'Level 2', 'Level 3', 'Level 4', 'b', '<svg viewBox="0 0 200 50" xmlns="http://www.w3.org/2000/svg"><circle cx="15" cy="25" r="3" fill="#0084AD"/><circle cx="30" cy="25" r="3" fill="#0084AD"/><circle cx="45" cy="25" r="3" fill="#0084AD"/><circle cx="22" cy="22" r="2" fill="#0084AD" opacity="0.7"/><circle cx="37" cy="22" r="2" fill="#0084AD" opacity="0.7"/><circle cx="60" cy="25" r="3" fill="#0084AD"/><circle cx="75" cy="25" r="3" fill="#0084AD"/><circle cx="67" cy="22" r="2" fill="#0084AD" opacity="0.7"/><text x="155" y="30" font-size="12" fill="#4A6572">?</text></svg>', false, true),
+('pattern_recognition', 'hard', 'What is the hidden pattern complexity?', 'Level 1', 'Level 2', 'Level 3', 'Level 4', 'b', '<svg viewBox="0 0 200 50" xmlns="http://www.w3.org/2000/svg"><circle cx="15" cy="25" r="3" fill="#0084AD"/><circle cx="30" cy="25" r="3" fill="#0084AD"/><circle cx="45" cy="25" r="3" fill="#0084AD"/><circle cx="22" cy="22" r="2" fill="#0084AD" opacity="0.7"/><circle cx="37" cy="22" r="2" fill="#0084AD" opacity="0.7"/><circle cx="60" cy="25" r="3" fill="#0084AD"/><circle cx="75" cy="25" r="3" fill="#0084AD"/><circle cx="67" cy="22" r="2" fill="#0084AD" opacity="0.7"/><text x="155" y="30" font-size="12" fill="#4A6572">?</text></svg>', false, true);
 
 -- ── VERBAL REASONING: EASY (5 questions) ──────────────────
 
