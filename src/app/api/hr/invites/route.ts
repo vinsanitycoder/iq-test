@@ -7,6 +7,7 @@ import { render } from '@react-email/render'
 import { InviteEmail } from '@/emails/InviteEmail'
 
 const NO_STORE = { 'Cache-Control': 'no-store' } as const
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 async function requireAdmin() {
   const supabase = await createClient()
@@ -51,14 +52,21 @@ export async function POST(req: NextRequest) {
   }
 
   const { applicantId, expiresAt, customMessage } = body
-  if (!applicantId || typeof applicantId !== 'string') {
-    return NextResponse.json({ error: 'applicantId is required.' }, { status: 400, headers: NO_STORE })
+  if (!applicantId || typeof applicantId !== 'string' || !UUID_RE.test(applicantId)) {
+    return NextResponse.json({ error: 'applicantId must be a valid UUID.' }, { status: 400, headers: NO_STORE })
   }
   if (!expiresAt || typeof expiresAt !== 'string' || Number.isNaN(Date.parse(expiresAt))) {
     return NextResponse.json({ error: 'expiresAt must be a valid ISO date.' }, { status: 400, headers: NO_STORE })
   }
   if (Date.parse(expiresAt) <= Date.now()) {
     return NextResponse.json({ error: 'expiresAt must be in the future.' }, { status: 400, headers: NO_STORE })
+  }
+  // Enforce server-side length cap on the custom message (CLAUDE.md says 2000)
+  if (customMessage !== undefined && typeof customMessage !== 'string') {
+    return NextResponse.json({ error: 'customMessage must be a string.' }, { status: 400, headers: NO_STORE })
+  }
+  if (typeof customMessage === 'string' && customMessage.length > 2000) {
+    return NextResponse.json({ error: 'customMessage must be 2000 characters or fewer.' }, { status: 400, headers: NO_STORE })
   }
 
   const admin = createAdminClient()

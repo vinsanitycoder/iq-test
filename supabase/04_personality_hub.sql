@@ -3,7 +3,12 @@
 -- Run AFTER 01_schema.sql, 02_rls.sql, 03_questions.sql
 -- Adds: invites, personality_sessions, personality_answers, personality_results
 -- Plus 3 new nullable columns on applicants
+--
+-- Wrapped in a transaction so partial failures don't leave the schema
+-- in a half-applied state. Either every statement commits, or none.
 -- ============================================================
+
+begin;
 
 -- ── Extend applicants with HR-editable fields ────────────────
 
@@ -187,3 +192,5 @@ do $$ begin
     using (false) with check (false);
 exception when duplicate_object then null;
 end $$;
+
+commit;

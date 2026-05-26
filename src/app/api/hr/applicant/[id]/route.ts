@@ -4,6 +4,16 @@ import { createClient } from '@/lib/supabase/server'
 
 const NO_STORE = { 'Cache-Control': 'no-store' } as const
 
+// Server-side length caps, matching the limits documented in CLAUDE.md
+const FIELD_MAX_LENGTHS: Record<string, number> = {
+  role_applied_for:    100,
+  resume_url:          500,
+  interview_video_url: 500,
+  notes:               500,
+}
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 async function requireHR() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -94,6 +104,9 @@ export async function PATCH(
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: NO_STORE })
 
   const { id } = await params
+  if (!UUID_RE.test(id)) {
+    return NextResponse.json({ error: 'Invalid applicant id.' }, { status: 400, headers: NO_STORE })
+  }
   const body = await req.json()
 
   // Only allow these fields — never accept anything else
@@ -110,6 +123,13 @@ export async function PATCH(
         if (!/^https?:\/\//i.test(val)) {
           return NextResponse.json({ error: `${field} must start with http:// or https://.` }, { status: 400, headers: NO_STORE })
         }
+      }
+      // Enforce length caps server-side (client also caps, but never trust the client)
+      if (val !== null && val.length > FIELD_MAX_LENGTHS[field]) {
+        return NextResponse.json(
+          { error: `${field} must be ${FIELD_MAX_LENGTHS[field]} characters or fewer.` },
+          { status: 400, headers: NO_STORE },
+        )
       }
       updates[field] = val ?? null
     }

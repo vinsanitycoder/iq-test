@@ -48,6 +48,23 @@ export async function POST() {
     .single<{ id: string; start_time: string }>()
 
   if (error || !newSession) {
+    // Race condition: a parallel request just created the session for this invite
+    // (UNIQUE constraint on invite_id rejects the second insert with code 23505).
+    // Recover gracefully by fetching the row the other request created.
+    if (error?.code === '23505') {
+      const { data: existing } = await admin
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from('personality_sessions' as any)
+        .select('id, start_time')
+        .eq('invite_id', invite.id)
+        .single<{ id: string; start_time: string }>()
+      if (existing) {
+        return NextResponse.json(
+          { sessionId: existing.id, startTime: existing.start_time },
+          { headers: NO_STORE }
+        )
+      }
+    }
     return NextResponse.json(
       { error: 'Failed to start session.' },
       { status: 500, headers: NO_STORE }

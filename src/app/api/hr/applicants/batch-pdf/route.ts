@@ -7,6 +7,9 @@ import { InterviewBriefDocument } from '@/lib/pdf/InterviewBrief'
 import type { BriefCandidate } from '@/lib/pdf/InterviewBrief'
 
 export const dynamic = 'force-dynamic'
+// PDF rendering for many candidates can exceed the Vercel default 10s timeout.
+// Vercel Hobby = max 60s, Pro = up to 300s — 60 is a safe ceiling either way.
+export const maxDuration = 60
 
 const NO_STORE = { 'Cache-Control': 'no-store' } as const
 const MAX_CANDIDATES = 50

@@ -442,19 +442,29 @@ export default function DashboardTable() {
   async function handleBulkStatus() {
     if (!bulkStatus || applyingStatus) return
     setApplyingStatus(true)
+    setBriefError('')
     try {
       const applicantIds = results
         .filter(r => selected.has(r.id) && r.applicants?.id)
         .map(r => r.applicants!.id)
-      await fetch('/api/hr/bulk-status', {
+      if (applicantIds.length === 0) {
+        setBriefError('No valid applicants selected.')
+        return
+      }
+      const res = await fetch('/api/hr/bulk-status', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ applicantIds, status: bulkStatus }),
       })
+      if (!res.ok) {
+        // Could be a stale browser tab using the old request shape. Tell the user.
+        setBriefError("Couldn't update status. Try refreshing the page (Ctrl/Cmd + Shift + R) and applying again.")
+        return
+      }
       clearSelection()
       await load()
     } catch {
-      // silent
+      setBriefError('Network error — please try again.')
     } finally {
       setApplyingStatus(false)
     }
@@ -503,19 +513,28 @@ export default function DashboardTable() {
 
   async function handleBulkDelete() {
     setDeleting(true)
+    setBriefError('')
     try {
       const applicantIds = results
         .filter(r => selected.has(r.id) && r.applicants?.id)
         .map(r => r.applicants!.id)
-      await fetch('/api/hr/bulk-delete', {
+      if (applicantIds.length === 0) {
+        setBriefError('No valid applicants selected.')
+        return
+      }
+      const res = await fetch('/api/hr/bulk-delete', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ applicantIds }),
       })
+      if (!res.ok) {
+        setBriefError("Couldn't delete the selected applicants. Try refreshing the page and trying again.")
+        return
+      }
       clearSelection()
       await load()
     } catch {
-      // silent
+      setBriefError('Network error — please try again.')
     } finally {
       setDeleting(false)
       setShowDeleteModal(false)

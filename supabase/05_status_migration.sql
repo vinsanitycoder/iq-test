@@ -17,7 +17,12 @@
 --   Only updates applicants whose status is still the default 'pending_review'.
 --   Re-running this script after HR has started using the new dashboard is
 --   safe — it will not overwrite any updates HR has made.
+--
+-- Wrapped in a transaction so a mid-run failure can't leave statuses in
+-- an inconsistent state.
 -- ============================================================
+
+begin;
 
 with latest_iq_status as (
   select distinct on (applicant_id)
@@ -32,6 +37,8 @@ set status = liq.status
 from latest_iq_status liq
 where liq.applicant_id = a.id
   and a.status = 'pending_review';
+
+commit;
 
 -- Report rows updated (run this select after the update to verify)
 select status, count(*) as applicant_count
