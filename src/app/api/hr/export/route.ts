@@ -10,6 +10,7 @@ type ExportRow = {
   weighted_score: number
   created_at: string
   applicants: {
+    id: string
     first_name: string
     last_name: string
     email: string
@@ -39,7 +40,7 @@ export async function GET() {
     .from('results')
     .select(`
       iq_score, iq_label, percentile, raw_score, weighted_score, created_at,
-      applicants (first_name, last_name, email, status, role_applied_for, resume_url, interview_video_url, notes),
+      applicants (id, first_name, last_name, email, status, role_applied_for, resume_url, interview_video_url, notes),
       test_sessions (time_taken_seconds, tab_switches)
     `)
     .order('created_at', { ascending: false })
@@ -48,12 +49,35 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
+  // ── Personality results (most recent per applicant) — for type_code column
+  const applicantIds = ((data as unknown as ExportRow[]) ?? [])
+    .map(r => r.applicants?.id)
+    .filter(Boolean) as string[]
+
+  const personalityTypeByApplicant: Record<string, string> = {}
+  if (applicantIds.length > 0) {
+    const { data: prRows } = await admin
+      .from('personality_results' as never)
+      .select('applicant_id, type_code, created_at')
+      .in('applicant_id', applicantIds)
+      .order('created_at', { ascending: false })
+      .returns<{ applicant_id: string; type_code: string; created_at: string }[]>()
+
+    for (const row of prRows ?? []) {
+      // most recent wins (array already sorted desc)
+      if (!personalityTypeByApplicant[row.applicant_id]) {
+        personalityTypeByApplicant[row.applicant_id] = row.type_code
+      }
+    }
+  }
+
   const header = [
     'First Name', 'Last Name', 'Email',
     'Role Applied For', 'Resume URL', 'Interview Video URL', 'Notes',
     'IQ Score', 'IQ Label', 'Percentile',
     'Raw Score', 'Weighted Score',
     'Time Taken (seconds)', 'Tab Switches',
+    'Personality Type',
     'Applicant Status', 'Date Completed',
   ]
 
@@ -79,6 +103,7 @@ export async function GET() {
       escapeCSV(row.weighted_score),
       escapeCSV(s?.time_taken_seconds),
       escapeCSV(s?.tab_switches ?? 0),
+      escapeCSV(personalityTypeByApplicant[a?.id ?? ''] ?? ''),
       escapeCSV(a?.status ?? 'pending_review'),
       escapeCSV(dateCompleted),
     ].join(',')
