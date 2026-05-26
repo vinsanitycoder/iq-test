@@ -74,13 +74,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Applicant not found.' }, { status: 404, headers: NO_STORE })
   }
 
-  // Revoke all prior pending invites for this applicant
+  // Revoke all prior pending + accessed invites for this applicant.
+  // This ensures the applicant can't continue a previous partial session
+  // and must use the new invite link instead.
   const { error: revokeErr } = await admin
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .from('invites' as any)
     .update({ status: 'revoked' })
     .eq('applicant_id', applicantId)
-    .eq('status', 'pending')
+    .in('status', ['pending', 'accessed'])
 
   if (revokeErr) {
     return NextResponse.json({ error: 'Failed to revoke prior invites.' }, { status: 500, headers: NO_STORE })
