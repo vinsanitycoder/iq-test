@@ -22,6 +22,7 @@ type Applicant = {
   role_applied_for: string | null
   resume_url: string | null
   interview_video_url: string | null
+  notes: string | null
 }
 
 type IQResult = {
@@ -165,6 +166,91 @@ function EditableField({
           <svg className="w-3.5 h-3.5 text-fynlo-subtle opacity-0 group-hover:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536M9 11l6-6 3 3-6 6H9v-3z" />
           </svg>
+        </dd>
+      )}
+    </div>
+  )
+}
+
+// ── Inline editable notes (textarea) ─────────────────────────────────────────
+
+function EditableNotesField({
+  value,
+  onSave,
+}: {
+  value: string | null
+  onSave: (val: string | null) => Promise<void>
+}) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState(value ?? '')
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => { setDraft(value ?? '') }, [value])
+
+  async function save() {
+    setSaving(true)
+    await onSave(draft.trim() || null)
+    setSaving(false)
+    setEditing(false)
+  }
+
+  function cancel() {
+    setDraft(value ?? '')
+    setEditing(false)
+  }
+
+  return (
+    <div className="col-span-full">
+      <dt className="text-xs font-semibold text-fynlo-subtle uppercase tracking-wide mb-1">Notes</dt>
+      {editing ? (
+        <dd className="space-y-2">
+          <textarea
+            autoFocus
+            value={draft}
+            onChange={e => setDraft(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Escape') cancel() }}
+            disabled={saving}
+            rows={4}
+            className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-fynlo-teal/40 disabled:opacity-50 resize-y"
+            placeholder="Add internal notes about this applicant…"
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={save}
+              disabled={saving}
+              className="text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-fynlo-teal text-white hover:opacity-80 disabled:opacity-40"
+            >
+              {saving ? '…' : 'Save'}
+            </button>
+            <button
+              onClick={cancel}
+              disabled={saving}
+              className="text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-gray-200 text-fynlo-body hover:bg-gray-50 disabled:opacity-40"
+            >
+              Cancel
+            </button>
+          </div>
+        </dd>
+      ) : (
+        <dd
+          className="group cursor-pointer"
+          onClick={() => setEditing(true)}
+        >
+          {value ? (
+            <div className="flex items-start gap-2">
+              <p className="text-sm text-fynlo-dark font-medium whitespace-pre-wrap flex-1">{value}</p>
+              <svg className="w-3.5 h-3.5 text-fynlo-subtle opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536M9 11l6-6 3 3-6 6H9v-3z" />
+              </svg>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <span className="text-sm italic text-fynlo-subtle">Click to add notes…</span>
+              <svg className="w-3.5 h-3.5 text-fynlo-subtle opacity-0 group-hover:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536M9 11l6-6 3 3-6 6H9v-3z" />
+              </svg>
+            </div>
+          )}
         </dd>
       )}
     </div>
@@ -420,6 +506,10 @@ export default function ApplicantDetailPage() {
                 value={applicant.interview_video_url}
                 placeholder="Click to add (https://…)"
                 onSave={val => patchField('interview_video_url', val)}
+              />
+              <EditableNotesField
+                value={applicant.notes}
+                onSave={val => patchField('notes', val)}
               />
             </dl>
           </div>

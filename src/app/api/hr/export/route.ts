@@ -17,6 +17,7 @@ type ExportRow = {
     role_applied_for: string | null
     resume_url: string | null
     interview_video_url: string | null
+    notes: string | null
   } | null
   test_sessions: { time_taken_seconds: number | null; tab_switches: number } | null
 }
@@ -38,7 +39,7 @@ export async function GET() {
     .from('results')
     .select(`
       iq_score, iq_label, percentile, raw_score, weighted_score, created_at,
-      applicants (first_name, last_name, email, status, role_applied_for, resume_url, interview_video_url),
+      applicants (first_name, last_name, email, status, role_applied_for, resume_url, interview_video_url, notes),
       test_sessions (time_taken_seconds, tab_switches)
     `)
     .order('created_at', { ascending: false })
@@ -49,7 +50,7 @@ export async function GET() {
 
   const header = [
     'First Name', 'Last Name', 'Email',
-    'Role Applied For', 'Resume URL', 'Interview Video URL',
+    'Role Applied For', 'Resume URL', 'Interview Video URL', 'Notes',
     'IQ Score', 'IQ Label', 'Percentile',
     'Raw Score', 'Weighted Score',
     'Time Taken (seconds)', 'Tab Switches',
@@ -70,6 +71,7 @@ export async function GET() {
       escapeCSV(a?.role_applied_for),
       escapeCSV(a?.resume_url),
       escapeCSV(a?.interview_video_url),
+      escapeCSV(a?.notes),
       escapeCSV(row.iq_score),
       escapeCSV(row.iq_label),
       escapeCSV(row.percentile),

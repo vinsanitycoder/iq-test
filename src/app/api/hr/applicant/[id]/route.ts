@@ -24,7 +24,7 @@ export async function GET(
   // Look up by applicant ID
   const { data: applicant, error: appError } = await admin
     .from('applicants' as any)
-    .select('id, first_name, last_name, email, source, created_at, role_applied_for, resume_url, interview_video_url')
+    .select('id, first_name, last_name, email, source, created_at, role_applied_for, resume_url, interview_video_url, notes')
     .eq('id', id)
     .maybeSingle<{
       id: string
@@ -36,6 +36,7 @@ export async function GET(
       role_applied_for: string | null
       resume_url: string | null
       interview_video_url: string | null
+      notes: string | null
     }>()
 
   if (appError || !applicant) {
@@ -95,8 +96,8 @@ export async function PATCH(
   const { id } = await params
   const body = await req.json()
 
-  // Only allow these three fields — never accept anything else
-  const allowed = ['role_applied_for', 'resume_url', 'interview_video_url'] as const
+  // Only allow these fields — never accept anything else
+  const allowed = ['role_applied_for', 'resume_url', 'interview_video_url', 'notes'] as const
   const updates: Record<string, string | null> = {}
   for (const field of allowed) {
     if (field in body) {

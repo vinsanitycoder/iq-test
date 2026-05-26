@@ -20,14 +20,14 @@ export async function GET() {
   const admin = createAdminClient()
   const { data, error } = await admin
     .from('applicants')
-    .select('first_name, last_name, email, role_applied_for, resume_url, interview_video_url')
+    .select('first_name, last_name, email, role_applied_for, resume_url, interview_video_url, notes')
     .order('created_at', { ascending: true })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   const rows = data ?? []
 
-  const headers = ['Email', 'First Name', 'Last Name', 'Role Applied For', 'Resume URL', 'Interview Video URL']
+  const headers = ['Email', 'First Name', 'Last Name', 'Role Applied For', 'Resume URL', 'Interview Video URL', 'Notes']
   const lines = [
     headers.join(','),
     ...rows.map(r => [
@@ -37,6 +37,7 @@ export async function GET() {
       escapeCsvField(r.role_applied_for),
       escapeCsvField(r.resume_url),
       escapeCsvField(r.interview_video_url),
+      escapeCsvField(r.notes),
     ].join(',')),
   ]
 

@@ -60,14 +60,16 @@ export interface Database {
           role_applied_for: string | null
           resume_url: string | null
           interview_video_url: string | null
+          notes: string | null
           status: string
         }
-        Insert: Omit<Database['public']['Tables']['applicants']['Row'], 'id' | 'created_at' | 'role_applied_for' | 'resume_url' | 'interview_video_url' | 'status'> & {
+        Insert: Omit<Database['public']['Tables']['applicants']['Row'], 'id' | 'created_at' | 'role_applied_for' | 'resume_url' | 'interview_video_url' | 'notes' | 'status'> & {
           id?: string
           created_at?: string
           role_applied_for?: string | null
           resume_url?: string | null
           interview_video_url?: string | null
+          notes?: string | null
           status?: string
         }
         Update: Partial<Database['public']['Tables']['applicants']['Row']>
