@@ -44,7 +44,7 @@ function normalizeHeader(h: string): string {
   return h.trim().toLowerCase().replace(/[\s_\-]+/g, '_')
 }
 
-// Maps normalized Indeed column names to our canonical names
+// Maps normalized column names to our canonical names
 const COLUMN_ALIASES: Record<string, string> = {
   first_name: 'first_name',
   firstname: 'first_name',
@@ -57,6 +57,18 @@ const COLUMN_ALIASES: Record<string, string> = {
   email_address: 'email',
   e_mail: 'email',
   candidate_email: 'email',
+  role_applied_for: 'role_applied_for',
+  role: 'role_applied_for',
+  position: 'role_applied_for',
+  job_title: 'role_applied_for',
+  resume_url: 'resume_url',
+  resume: 'resume_url',
+  cv_url: 'resume_url',
+  cv: 'resume_url',
+  interview_video_url: 'interview_video_url',
+  video_url: 'interview_video_url',
+  video: 'interview_video_url',
+  interview_video: 'interview_video_url',
 }
 
 const REQUIRED = ['first_name', 'last_name', 'email'] as const
@@ -117,9 +129,36 @@ export async function POST(request: Request) {
       continue
     }
 
+    const roleAppliedFor = headerMap['role_applied_for'] !== undefined
+      ? row[headerMap['role_applied_for']]?.trim() || null
+      : null
+    const resumeUrl = headerMap['resume_url'] !== undefined
+      ? row[headerMap['resume_url']]?.trim() || null
+      : null
+    const videoUrl = headerMap['interview_video_url'] !== undefined
+      ? row[headerMap['interview_video_url']]?.trim() || null
+      : null
+
+    // Skip rows with invalid URLs
+    for (const [field, val] of [['resume_url', resumeUrl], ['interview_video_url', videoUrl]] as const) {
+      if (val && !/^https?:\/\//i.test(val)) {
+        errors.push(`Row ${i + 2}: ${field} must start with http:// or https:// — value ignored.`)
+      }
+    }
+
+    const insertData = {
+      first_name: firstName,
+      last_name: lastName,
+      email,
+      source: 'indeed',
+      role_applied_for: roleAppliedFor ?? null,
+      resume_url: (resumeUrl && /^https?:\/\//i.test(resumeUrl)) ? resumeUrl : null,
+      interview_video_url: (videoUrl && /^https?:\/\//i.test(videoUrl)) ? videoUrl : null,
+    }
+
     const { data: applicant, error: insertErr } = await admin
       .from('applicants')
-      .insert({ first_name: firstName, last_name: lastName, email, source: 'indeed' })
+      .insert(insertData)
       .select('id')
       .single()
 

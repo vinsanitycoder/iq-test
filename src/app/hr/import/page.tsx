@@ -63,24 +63,41 @@ export default function ImportPage() {
           </p>
         </div>
 
-        {/* Required columns info */}
-        <div className="bg-white rounded-card shadow-card p-5 mb-5">
-          <h2 className="text-xs font-bold text-fynlo-subtle uppercase tracking-wide mb-3">
-            Required columns
-          </h2>
-          <div className="flex flex-wrap gap-2">
-            {['First Name', 'Last Name', 'Email'].map(col => (
-              <span
-                key={col}
-                className="px-3 py-1 rounded-full text-xs font-semibold"
-                style={{ backgroundColor: '#D4FF98', color: '#003B4C' }}
-              >
-                {col}
-              </span>
-            ))}
+        {/* Column info */}
+        <div className="bg-white rounded-card shadow-card p-5 mb-5 space-y-4">
+          <div>
+            <h2 className="text-xs font-bold text-fynlo-subtle uppercase tracking-wide mb-3">
+              Required columns
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {['First Name', 'Last Name', 'Email'].map(col => (
+                <span
+                  key={col}
+                  className="px-3 py-1 rounded-full text-xs font-semibold"
+                  style={{ backgroundColor: '#D4FF98', color: '#003B4C' }}
+                >
+                  {col}
+                </span>
+              ))}
+            </div>
           </div>
-          <p className="text-xs text-fynlo-subtle mt-3 leading-relaxed">
-            Any extra columns in the file are ignored. Column names are matched flexibly — &quot;First Name&quot;, &quot;first_name&quot;, and &quot;firstname&quot; all work.
+          <div>
+            <h2 className="text-xs font-bold text-fynlo-subtle uppercase tracking-wide mb-3">
+              Optional columns
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {['Role Applied For', 'Resume URL', 'Interview Video URL'].map(col => (
+                <span
+                  key={col}
+                  className="px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600"
+                >
+                  {col}
+                </span>
+              ))}
+            </div>
+          </div>
+          <p className="text-xs text-fynlo-subtle leading-relaxed">
+            Column names are matched flexibly — &quot;First Name&quot;, &quot;first_name&quot;, and &quot;firstname&quot; all work. URLs must start with http:// or https:// — invalid values are skipped. Any other columns are ignored.
           </p>
         </div>
 

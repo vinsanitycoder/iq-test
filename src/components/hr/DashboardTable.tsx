@@ -14,7 +14,15 @@ type DashboardRow = {
   status: string
   created_at: string
   personality_status: string
-  applicants: { id: string; first_name: string; last_name: string; email: string } | null
+  applicants: {
+    id: string
+    first_name: string
+    last_name: string
+    email: string
+    role_applied_for: string | null
+    resume_url: string | null
+    interview_video_url: string | null
+  } | null
   test_sessions: { time_taken_seconds: number | null; tab_switches: number } | null
 }
 
@@ -202,6 +210,135 @@ function InviteModal({
   )
 }
 
+// ── Quick-edit modal (role / resume / video from dashboard row) ────────────
+
+function QuickEditModal({
+  applicantId,
+  applicantName,
+  initialRole,
+  initialResume,
+  initialVideo,
+  onClose,
+  onSaved,
+}: {
+  applicantId: string
+  applicantName: string
+  initialRole: string | null
+  initialResume: string | null
+  initialVideo: string | null
+  onClose: () => void
+  onSaved: () => void
+}) {
+  const [role, setRole] = useState(initialRole ?? '')
+  const [resume, setResume] = useState(initialResume ?? '')
+  const [video, setVideo] = useState(initialVideo ?? '')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleSave() {
+    setError(null)
+    if (resume && !/^https?:\/\//i.test(resume)) {
+      setError('Resume URL must start with http:// or https://')
+      return
+    }
+    if (video && !/^https?:\/\//i.test(video)) {
+      setError('Video URL must start with http:// or https://')
+      return
+    }
+    setSaving(true)
+    const res = await fetch(`/api/hr/applicant/${applicantId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        role_applied_for: role.trim() || null,
+        resume_url: resume.trim() || null,
+        interview_video_url: video.trim() || null,
+      }),
+    })
+    if (!res.ok) {
+      const data = await res.json()
+      setError(data.error ?? 'Save failed.')
+    } else {
+      onSaved()
+    }
+    setSaving(false)
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center px-4"
+      style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}
+      onClick={e => { if (e.target === e.currentTarget && !saving) onClose() }}
+    >
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+        <div className="flex items-center justify-between mb-1">
+          <h3 className="text-lg font-black text-fynlo-dark">Edit Applicant</h3>
+          <button onClick={onClose} disabled={saving} className="text-fynlo-subtle hover:text-fynlo-dark transition-colors disabled:opacity-40">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <p className="text-sm text-fynlo-subtle mb-5">{applicantName}</p>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-fynlo-subtle uppercase tracking-wide mb-1">Role applied for</label>
+            <input
+              type="text"
+              value={role}
+              onChange={e => setRole(e.target.value)}
+              disabled={saving}
+              placeholder="e.g. Senior Accountant"
+              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-fynlo-teal/40 disabled:opacity-50"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-fynlo-subtle uppercase tracking-wide mb-1">Resume URL</label>
+            <input
+              type="url"
+              value={resume}
+              onChange={e => setResume(e.target.value)}
+              disabled={saving}
+              placeholder="https://…"
+              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-fynlo-teal/40 disabled:opacity-50"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-fynlo-subtle uppercase tracking-wide mb-1">Interview video URL</label>
+            <input
+              type="url"
+              value={video}
+              onChange={e => setVideo(e.target.value)}
+              disabled={saving}
+              placeholder="https://…"
+              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-fynlo-teal/40 disabled:opacity-50"
+            />
+          </div>
+        </div>
+
+        {error && (
+          <div className="mt-4 px-4 py-3 rounded-xl text-sm bg-red-50 text-red-700">{error}</div>
+        )}
+
+        <div className="flex gap-3 mt-5">
+          <button onClick={onClose} disabled={saving} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-fynlo-body hover:bg-gray-50 transition-colors disabled:opacity-40">
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="flex-1 py-2.5 rounded-xl text-white text-sm font-semibold transition-opacity hover:opacity-80 disabled:opacity-40"
+            style={{ backgroundColor: '#0084AD' }}
+          >
+            {saving ? 'Saving…' : 'Save'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Main component ─────────────────────────────────────────────────────────
 
 export default function DashboardTable() {
@@ -214,6 +351,7 @@ export default function DashboardTable() {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [inviteTarget, setInviteTarget] = useState<{ id: string; firstName: string; email: string } | null>(null)
+  const [editTarget, setEditTarget] = useState<{ id: string; name: string; role: string | null; resume: string | null; video: string | null } | null>(null)
   const selectAllRef = useRef<HTMLInputElement>(null)
 
   const load = useCallback(async () => {
@@ -383,8 +521,9 @@ export default function DashboardTable() {
                 <th className="text-left px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide hidden sm:table-cell">Label</th>
                 <th className="text-center px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide hidden md:table-cell">Percentile</th>
                 <th className="text-center px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide hidden lg:table-cell">Time</th>
+                <th className="text-center px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide hidden lg:table-cell">Tabs</th>
                 <th className="text-left px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide hidden md:table-cell">Date</th>
-                <th className="text-left px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide hidden lg:table-cell">Personality</th>
+                <th className="text-left px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide hidden md:table-cell">Personality</th>
                 <th className="text-left px-4 py-3 font-semibold text-fynlo-subtle text-xs uppercase tracking-wide">Status</th>
                 <th className="px-4 py-3 w-8" />
               </tr>
@@ -423,10 +562,22 @@ export default function DashboardTable() {
                     <td className="px-4 py-3 text-center text-fynlo-body hidden lg:table-cell">
                       {formatTime(row.test_sessions?.time_taken_seconds ?? null)}
                     </td>
+                    <td className="px-4 py-3 text-center hidden lg:table-cell">
+                      {(row.test_sessions?.tab_switches ?? 0) > 0 ? (
+                        <span className="inline-flex items-center gap-1 text-xs font-bold text-fynlo-terra">
+                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                          </svg>
+                          {row.test_sessions!.tab_switches}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-fynlo-subtle">0</span>
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-fynlo-subtle hidden md:table-cell">
                       {formatDate(row.created_at)}
                     </td>
-                    <td className="px-4 py-3 hidden lg:table-cell">
+                    <td className="px-4 py-3 hidden md:table-cell">
                       {isAdmin && canInvite ? (
                         <button
                           onClick={() => setInviteTarget({ id: applicant!.id, firstName: applicant!.first_name, email: applicant!.email })}
@@ -453,7 +604,24 @@ export default function DashboardTable() {
                       />
                     </td>
                     <td className="px-4 py-3">
-                      <RowDeleteButton applicantId={applicant?.id ?? ''} applicantName={name} onDelete={load} />
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => setEditTarget({
+                            id: applicant?.id ?? row.id,
+                            name,
+                            role: applicant?.role_applied_for ?? null,
+                            resume: applicant?.resume_url ?? null,
+                            video: applicant?.interview_video_url ?? null,
+                          })}
+                          title="Edit applicant details"
+                          className="p-1 rounded-lg text-fynlo-subtle hover:text-fynlo-teal hover:bg-gray-100 transition-colors"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536M9 11l6-6 3 3-6 6H9v-3z" />
+                          </svg>
+                        </button>
+                        <RowDeleteButton applicantId={applicant?.id ?? ''} applicantName={name} onDelete={load} />
+                      </div>
                     </td>
                   </tr>
                 )
@@ -471,6 +639,19 @@ export default function DashboardTable() {
           applicantEmail={inviteTarget.email}
           onClose={() => setInviteTarget(null)}
           onSent={() => { load(); setInviteTarget(null) }}
+        />
+      )}
+
+      {/* Quick-edit modal */}
+      {editTarget && (
+        <QuickEditModal
+          applicantId={editTarget.id}
+          applicantName={editTarget.name}
+          initialRole={editTarget.role}
+          initialResume={editTarget.resume}
+          initialVideo={editTarget.video}
+          onClose={() => setEditTarget(null)}
+          onSaved={() => { load(); setEditTarget(null) }}
         />
       )}
 

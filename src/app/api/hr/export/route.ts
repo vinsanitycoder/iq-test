@@ -8,9 +8,16 @@ type ExportRow = {
   percentile: number
   raw_score: number
   weighted_score: number
-  status: string
   created_at: string
-  applicants: { first_name: string; last_name: string; email: string } | null
+  applicants: {
+    first_name: string
+    last_name: string
+    email: string
+    status: string | null
+    role_applied_for: string | null
+    resume_url: string | null
+    interview_video_url: string | null
+  } | null
   test_sessions: { time_taken_seconds: number | null; tab_switches: number } | null
 }
 
@@ -30,8 +37,8 @@ export async function GET() {
   const { data, error } = await admin
     .from('results')
     .select(`
-      iq_score, iq_label, percentile, raw_score, weighted_score, status, created_at,
-      applicants (first_name, last_name, email),
+      iq_score, iq_label, percentile, raw_score, weighted_score, created_at,
+      applicants (first_name, last_name, email, status, role_applied_for, resume_url, interview_video_url),
       test_sessions (time_taken_seconds, tab_switches)
     `)
     .order('created_at', { ascending: false })
@@ -42,10 +49,11 @@ export async function GET() {
 
   const header = [
     'First Name', 'Last Name', 'Email',
+    'Role Applied For', 'Resume URL', 'Interview Video URL',
     'IQ Score', 'IQ Label', 'Percentile',
     'Raw Score', 'Weighted Score',
     'Time Taken (seconds)', 'Tab Switches',
-    'Status', 'Date Completed',
+    'Applicant Status', 'Date Completed',
   ]
 
   const rows = (data as unknown as ExportRow[]).map(row => {
@@ -59,6 +67,9 @@ export async function GET() {
       escapeCSV(a?.first_name),
       escapeCSV(a?.last_name),
       escapeCSV(a?.email),
+      escapeCSV(a?.role_applied_for),
+      escapeCSV(a?.resume_url),
+      escapeCSV(a?.interview_video_url),
       escapeCSV(row.iq_score),
       escapeCSV(row.iq_label),
       escapeCSV(row.percentile),
@@ -66,7 +77,7 @@ export async function GET() {
       escapeCSV(row.weighted_score),
       escapeCSV(s?.time_taken_seconds),
       escapeCSV(s?.tab_switches ?? 0),
-      escapeCSV(row.status),
+      escapeCSV(a?.status ?? 'pending_review'),
       escapeCSV(dateCompleted),
     ].join(',')
   })
