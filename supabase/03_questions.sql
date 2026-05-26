@@ -177,8 +177,8 @@ INSERT INTO questions (type, difficulty, question_text, option_a, option_b, opti
 
 -- ── VERBAL REASONING: EASY (5 questions) ──────────────────
 
-INSERT INTO questions (type, difficulty, question_text, option_a, option_b, option_c, option_d, correct_answer, is_practice, is_active) VALUES
-('verbal_analogy', 'easy', 'Bird is to nest as bee is to ___', 'Flower', 'Hive', 'Honey', 'Wing', 'b', false, true),
+INSERT INTO questions (type, difficulty, question_text, option_a, option_b, option_c, option_d, correct_answer, svg_content, is_practice, is_active) VALUES
+('verbal_analogy', 'easy', 'Bird is to nest as bee is to ___', 'Flower', 'Hive', 'Honey', 'Wing', 'b', NULL, false, true),
 ('spatial', 'easy', 'What is the mirror image?', 'Left flip', 'Right flip', 'Top flip', 'No flip', 'a', '<svg viewBox="0 0 200 50" xmlns="http://www.w3.org/2000/svg"><line x1="100" y1="10" x2="100" y2="40" stroke="#999" stroke-width="1" stroke-dasharray="2,2"/><polygon points="50,18 60,18 55,32" fill="#0084AD"/><polygon points="140,18 150,18 145,32" fill="white" stroke="#999"/><text x="20" y="35" font-size="11" fill="#4A6572">Mirror line</text></svg>', false, true),
 ('spatial', 'easy', 'How many faces does this cube have visible?', '1', '2', '3', '4', 'c', '<svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg"><polygon points="30,20 60,20 60,50 30,50" fill="#0084AD"/><polygon points="60,20 85,10 85,40 60,50" fill="#0084AD" opacity="0.8"/><polygon points="30,50 60,50 85,40 60,30" fill="#0084AD" opacity="0.6"/></svg>', false, true),
 ('spatial', 'easy', 'Which shows the correct side view?', 'View A', 'View B', 'View C', 'View D', 'b', '<svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg"><polygon points="40,15 60,15 65,30 45,30" fill="#0084AD"/><text x="30" y="50" font-size="11" fill="#4A6572">Front</text><polygon points="100,20 110,20 110,30 100,30" fill="white" stroke="#0084AD" stroke-width="2"/><text x="95" y="50" font-size="11" fill="#4A6572">Side</text><polygon points="150,15 165,15 165,30 150,30" fill="#0084AD" opacity="0.5"/><text x="140" y="50" font-size="11" fill="#4A6572">Top</text></svg>', false, true),
