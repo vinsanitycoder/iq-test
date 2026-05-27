@@ -396,6 +396,45 @@ All four new tables: RLS enabled, deny-all policy for `anon` and `authenticated`
 |---|---|---|
 | **IQ 55 for every applicant** (May 2026 production outage) | ✅ May 2026 | Old client used `.catch(()=>{})` and never checked `res.ok` — answer-save failures dropped silently, scoring found 0 answers, returned hardcoded fallback 55. Fixed by surfacing errors with banner + blocking navigation until save succeeds. Production patched separately by user; staging verified working with QA Test scoring IQ 66 from 2 correct answers. |
 
+---
+
+## Post-Mortem: Personality Hub Production Launch (27 May 2026)
+
+What we learned from this launch. These lessons are mostly captured in the user's framework memory at `feedback_production_deployment.md`, but the project-specific evidence is below.
+
+### What we did well
+
+1. **Phased delivery** — Phase 7 → 7b → 8 → 9 with clean break points. Could pause/resume cleanly.
+2. **Parallel agent audits** — Three agents running in parallel during the deep audit found the status-migration data-loss risk, the non-atomic SQL risk, and the bulk-status silent-error UX issue. Sequential would have missed at least one.
+3. **Pre-flight SQL queries before migration** — 5 read-only queries (A1–A5) verified the production DB was in the expected state before any DDL ran. Caught nothing surprising this time but built confidence and would have caught issues had they existed.
+4. **Wrapping migrations in BEGIN/COMMIT** — Atomic apply or full rollback. Cost: 2 lines. Benefit: no half-applied schema.
+5. **Data-preservation migration alongside schema change** — `05_status_migration.sql` would have saved any existing IQ statuses on `results.status`. Was a no-op this time (production happened to have no non-default statuses) but the pattern is now established.
+6. **Smoke testing on production itself, not just staging** — Found the "Time" column ambiguity within minutes of going live; fixed and redeployed before the issue caused real confusion.
+
+### What we could have caught earlier
+
+1. **The "Time" column ambiguity** — `formatTime(seconds)` returns "20:55" for 20 minutes 55 seconds. HR read it as 8:55 PM. Code review and audits couldn't catch this because the rendering was correct — the *label* was ambiguous. Lesson: have a non-developer user click through the dashboard at least once before production, focused only on labels and reading flow.
+
+2. **The IQ-55 silent-failure pattern** — The original code used `.catch(() => {})` on the answer-save fetch and never checked `res.ok`. This had been in production for weeks before being caught. Lesson: grep every new codebase for `catch\s*\(\s*\)\s*=>\s*\{\s*\}` and treat each match as a bug ticket.
+
+3. **The first audit said "ship it" when 5 real issues remained** — The user's pushback ("are you sure we are ready, a light audit seemed to reveal a couple of critical issues") prompted the deep audit that surfaced them. Lesson: when the user asks "are you sure?", the answer is always "let me do another pass." Never "yes."
+
+4. **The IQ-55 fix wasn't on the feature branch initially** — It went to main as a hotfix while the feature branch was in flight. We had to cherry-pick it later. Lesson: after every hotfix to main, immediately merge main into all active feature branches.
+
+5. **Production env vars weren't verified before the deploy attempt** — RESEND vars were on Preview but not Production. Caught during the deployment checklist but ideally would have been confirmed days earlier. Lesson: env var verification on the target environment is a pre-deploy gate, not a deploy-time step.
+
+### What's still deferred (resilience tier 1+)
+
+- Uptime monitoring on `/api/ping` — user deferred at the end of this session
+- Sentry error monitoring — high value, not yet set up
+- Indeed import email format validation
+- Sentry/Resend daily-limit awareness for the invite path
+
+These don't block production but reduce time-to-detect for the next class of issue.
+
+### Total session arc
+13 hours (≈) across 2 days. Build, audit, deep audit, fix, deploy, smoke test, post-mortem. Production status: stable. Personality hub serving real applicants. Zero data loss from migration. Zero rollbacks required.
+
 ## Stale UI Rules (must follow for all future features)
 
 Any HR page or component that shows live data MUST follow all four rules:
@@ -449,6 +488,7 @@ Any HR page or component that shows live data MUST follow all four rules:
 - [x] Phase 7b: Batch interview brief PDF + selected-only CSV/Excel exports
 - [x] Phase 8: QA on staging — full pass, all 13 checklist items verified
 - [x] **Phase 9: Production deployment** — 27 May 2026. Personality hub now live at cognitivetest.fynloapps.com. All 8 smoke tests passed: public IQ landing, HR login, dashboard, existing applicants intact, per-applicant PDF, bulk export (Brief/CSV/Excel), invite send + email arrival, /personality/welcome + first 10 questions saved.
+- [x] **Phase 9b: HR forgot-password flow + Supabase URL configuration** — post-launch resilience. `/hr/login` has a "Forgot your password?" modal calling `resetPasswordForEmail`; `/hr/reset-password` page handles the recovery session and lets the user set a new password.
 
 Update the checklist above when each phase is complete.
 
