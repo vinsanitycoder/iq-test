@@ -47,6 +47,8 @@ function CharCounter({ value, max }: { value: string; max: number }) {
 
 export default function SettingsPage() {
   const [fields, setFields] = useState<Fields>(EMPTY)
+  const [autoSendInvite, setAutoSendInvite] = useState(false)
+  const [autoInviteDays, setAutoInviteDays] = useState(7)
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -76,6 +78,12 @@ export default function SettingsPage() {
             whats_next_text: settings.whats_next_text ?? '',
           })
           setLogoUrl(settings.company_logo_url ?? null)
+          setAutoSendInvite(Boolean(settings.auto_send_personality_invite))
+          setAutoInviteDays(
+            typeof settings.auto_invite_deadline_days === 'number' && settings.auto_invite_deadline_days >= 1
+              ? settings.auto_invite_deadline_days
+              : 7
+          )
         }
       })
       .finally(() => setLoading(false))
@@ -91,13 +99,22 @@ export default function SettingsPage() {
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
+    // Client-side validation of the deadline before sending
+    if (!Number.isInteger(autoInviteDays) || autoInviteDays < 1 || autoInviteDays > 365) {
+      setSaveMsg({ ok: false, text: 'Auto-invite deadline must be between 1 and 365 days.' })
+      return
+    }
     setSaving(true)
     setSaveMsg(null)
     try {
       const res = await fetch('/api/hr/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(fields),
+        body: JSON.stringify({
+          ...fields,
+          auto_send_personality_invite: autoSendInvite,
+          auto_invite_deadline_days: autoInviteDays,
+        }),
       })
       const json = await res.json()
       if (!res.ok) {
@@ -400,6 +417,59 @@ export default function SettingsPage() {
                 placeholder="Our team will review your results and reach out within a few days."
                 className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-fynlo-dark placeholder:text-fynlo-subtle focus:outline-none focus:ring-2 focus:ring-fynlo-teal/40 focus:border-fynlo-teal resize-none leading-relaxed"
               />
+            </div>
+          </div>
+
+          {/* Personality invite automation */}
+          <div className="bg-white rounded-card shadow-card p-5 mb-5 space-y-4">
+            <h2 className="text-xs font-bold text-fynlo-subtle uppercase tracking-wide">
+              Personality Test Automation
+            </h2>
+
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={autoSendInvite}
+                onChange={e => { setAutoSendInvite(e.target.checked); setSaveMsg(null) }}
+                className="mt-1 h-4 w-4 rounded border-gray-300 accent-fynlo-teal cursor-pointer"
+              />
+              <div className="flex-1">
+                <div className="text-sm font-semibold text-fynlo-dark">
+                  Automatically send personality test invite after IQ test
+                </div>
+                <p className="text-xs text-fynlo-subtle mt-1 leading-relaxed">
+                  When on, every applicant who completes the IQ test gets a personality invite email
+                  automatically. HR can still revoke individual invites or send a manual one with a
+                  custom message from the applicant page.
+                </p>
+              </div>
+            </label>
+
+            <div className={autoSendInvite ? '' : 'opacity-50 pointer-events-none'}>
+              <label className="block text-sm font-semibold text-fynlo-dark mb-1.5">
+                Deadline for auto-sent invites
+              </label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="number"
+                  min={1}
+                  max={365}
+                  step={1}
+                  value={autoInviteDays}
+                  onChange={e => {
+                    const n = parseInt(e.target.value, 10)
+                    if (!Number.isNaN(n)) setAutoInviteDays(n)
+                    setSaveMsg(null)
+                  }}
+                  disabled={!autoSendInvite}
+                  className="w-24 border border-gray-200 rounded-xl px-3 py-2 text-sm text-fynlo-dark focus:outline-none focus:ring-2 focus:ring-fynlo-teal/40 focus:border-fynlo-teal disabled:bg-gray-50"
+                />
+                <span className="text-sm text-fynlo-body">days from IQ completion</span>
+              </div>
+              <p className="text-xs text-fynlo-subtle mt-2 leading-relaxed">
+                The applicant has this many days to complete the personality test before the invite expires.
+                Allowed range: 1–365 days.
+              </p>
             </div>
           </div>
 

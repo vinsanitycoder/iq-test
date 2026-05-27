@@ -1,5 +1,6 @@
 import HRNav from '@/components/hr/HRNav'
 import DashboardTable from '@/components/hr/DashboardTable'
+import AutoInviteBanner from '@/components/hr/AutoInviteBanner'
 
 const IQ_LABEL_STYLES: Record<string, string> = {
   'Superior':      'bg-purple-100 text-purple-800',
@@ -53,6 +54,8 @@ export default function HRDashboardPage() {
             </a>
           </div>
         </div>
+
+        <AutoInviteBanner />
 
         <div className="flex flex-col lg:flex-row gap-6">
           <div className="flex-1 min-w-0">
