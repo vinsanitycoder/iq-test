@@ -26,12 +26,19 @@ async function maybeAutoInvite(request: NextRequest, applicantId: string) {
   const admin = createAdminClient()
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: settings } = await admin
+  const { data: settings, error: settingsErr } = await admin
     .from('settings' as any)
-    .select('auto_send_personality_invite, auto_invite_deadline_days')
-    .single<{ auto_send_personality_invite: boolean; auto_invite_deadline_days: number }>()
+    .select('auto_send_personality_invite, auto_invite_deadline_days, auto_invite_email_body')
+    .single<{
+      auto_send_personality_invite: boolean
+      auto_invite_deadline_days: number
+      auto_invite_email_body: string | null
+    }>()
 
-  if (!settings?.auto_send_personality_invite) return
+  // If we can't read settings (e.g. transient DB issue, or column missing
+  // because SQL migration hasn't been applied yet), bail out safely — the
+  // outer try/catch will log and the IQ completion response still succeeds.
+  if (settingsErr || !settings?.auto_send_personality_invite) return
 
   const days = Number.isInteger(settings.auto_invite_deadline_days)
     && settings.auto_invite_deadline_days >= 1
@@ -41,10 +48,15 @@ async function maybeAutoInvite(request: NextRequest, applicantId: string) {
 
   const expiresAt = new Date(Date.now() + days * 24 * 3600 * 1000).toISOString()
 
+  // Use HR's custom body from settings if set; otherwise undefined ⇒ the
+  // InviteEmail template renders its built-in defaultParagraphs (unchanged
+  // from today's behaviour).
+  const customMessage = settings.auto_invite_email_body?.trim() || undefined
+
   const result = await createAndSendInvite(applicantId, {
     baseUrl: getAppUrl(request),
     expiresAt,
-    customMessage: undefined,  // use the email template default
+    customMessage,
   })
 
   if (!result.ok) {

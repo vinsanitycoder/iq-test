@@ -33,6 +33,7 @@ export async function POST(req: NextRequest) {
     whats_next_text,
     auto_send_personality_invite,
     auto_invite_deadline_days,
+    auto_invite_email_body,
   } = body
 
   if (!company_name || typeof company_name !== 'string' || company_name.trim().length === 0) {
@@ -62,6 +63,30 @@ export async function POST(req: NextRequest) {
     autoDays = auto_invite_deadline_days
   }
 
+  // auto_invite_email_body: optional custom body for auto-sent invites.
+  // Accepts a string or null. Empty / whitespace-only strings are treated
+  // as null so the auto-invite falls back to the built-in template.
+  // Same 2000-char cap as the manual-invite customMessage.
+  let autoBody: string | null | undefined
+  if (auto_invite_email_body !== undefined) {
+    if (auto_invite_email_body === null) {
+      autoBody = null
+    } else if (typeof auto_invite_email_body !== 'string') {
+      return NextResponse.json(
+        { error: 'auto_invite_email_body must be a string or null.' },
+        { status: 400 },
+      )
+    } else if (auto_invite_email_body.length > 2000) {
+      return NextResponse.json(
+        { error: 'auto_invite_email_body must be 2000 characters or fewer.' },
+        { status: 400 },
+      )
+    } else {
+      const trimmed = auto_invite_email_body.trim()
+      autoBody = trimmed.length === 0 ? null : trimmed
+    }
+  }
+
   const admin = createAdminClient()
   const { data: existing } = await admin.from('settings').select('id').single()
 
@@ -77,6 +102,7 @@ export async function POST(req: NextRequest) {
   }
   if (autoSend !== undefined) payload.auto_send_personality_invite = autoSend
   if (autoDays !== undefined) payload.auto_invite_deadline_days = autoDays
+  if (autoBody !== undefined) payload.auto_invite_email_body = autoBody
 
   let error
   if (existing?.id) {
