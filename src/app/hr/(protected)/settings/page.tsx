@@ -494,7 +494,7 @@ export default function SettingsPage() {
                   disabled={!autoSendInvite}
                   rows={7}
                   maxLength={2000}
-                  placeholder={`Thanks for completing the IQ test. As the next step, we'd love for you to take a short personality assessment.\n\nIt's 100 questions and takes about 30–45 minutes — there are no right or wrong answers, just be yourself.`}
+                  placeholder={`Thanks for completing the cognitive assessment — that's the first step done.\n\nNext, we'd love for you to take a short personality assessment. It's about 100 questions and takes 30–45 minutes.\n\nThere are no right or wrong answers — just respond honestly with what feels most like you. You can pause and resume on any device if you need to.\n\nOnce you're finished, we'll review everything and be in touch about the next steps.`}
                   className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-fynlo-dark placeholder:text-fynlo-subtle focus:outline-none focus:ring-2 focus:ring-fynlo-teal/40 focus:border-fynlo-teal resize-y leading-relaxed disabled:bg-gray-50"
                 />
                 <p className="text-xs text-fynlo-subtle mt-2 leading-relaxed">
