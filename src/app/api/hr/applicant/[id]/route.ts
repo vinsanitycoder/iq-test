@@ -4,11 +4,13 @@ import { createClient } from '@/lib/supabase/server'
 
 const NO_STORE = { 'Cache-Control': 'no-store' } as const
 
-// Server-side length caps, matching the limits documented in CLAUDE.md
+// Server-side length caps, matching the limits documented in CLAUDE.md.
+// interview_video_url: raised to 1000 — Loom-style review links with embedded
+// tokens or query strings sometimes exceed 500 characters.
 const FIELD_MAX_LENGTHS: Record<string, number> = {
   role_applied_for:    100,
   resume_url:          500,
-  interview_video_url: 500,
+  interview_video_url: 1000,
   notes:               500,
 }
 

@@ -49,6 +49,7 @@ export default function SettingsPage() {
   const [fields, setFields] = useState<Fields>(EMPTY)
   const [autoSendInvite, setAutoSendInvite] = useState(false)
   const [autoInviteDays, setAutoInviteDays] = useState(7)
+  const [autoInviteBody, setAutoInviteBody] = useState('')
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -84,6 +85,11 @@ export default function SettingsPage() {
               ? settings.auto_invite_deadline_days
               : 7
           )
+          setAutoInviteBody(
+            typeof settings.auto_invite_email_body === 'string'
+              ? settings.auto_invite_email_body
+              : ''
+          )
         }
       })
       .finally(() => setLoading(false))
@@ -114,6 +120,8 @@ export default function SettingsPage() {
           ...fields,
           auto_send_personality_invite: autoSendInvite,
           auto_invite_deadline_days: autoInviteDays,
+          // Server treats empty / whitespace-only as null (use default template)
+          auto_invite_email_body: autoInviteBody,
         }),
       })
       const json = await res.json()
@@ -470,6 +478,35 @@ export default function SettingsPage() {
                 The applicant has this many days to complete the personality test before the invite expires.
                 Allowed range: 1–365 days.
               </p>
+
+              <div className="mt-5">
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-sm font-semibold text-fynlo-dark">
+                    Email body for auto-sent invites
+                  </label>
+                  <span className={`text-xs tabular-nums ${autoInviteBody.length > 1800 ? 'text-fynlo-terra font-semibold' : 'text-fynlo-subtle'}`}>
+                    {2000 - autoInviteBody.length} left
+                  </span>
+                </div>
+                <textarea
+                  value={autoInviteBody}
+                  onChange={e => { setAutoInviteBody(e.target.value.slice(0, 2000)); setSaveMsg(null) }}
+                  disabled={!autoSendInvite}
+                  rows={7}
+                  maxLength={2000}
+                  placeholder={`Thanks for completing the cognitive assessment — that's the first step done.\n\nNext, we'd love for you to take a short personality assessment. It's about 100 questions and takes 30–45 minutes.\n\nThere are no right or wrong answers — just respond honestly with what feels most like you. You can pause and resume on any device if you need to.\n\nOnce you're finished, we'll review everything and be in touch about the next steps.`}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-fynlo-dark placeholder:text-fynlo-subtle focus:outline-none focus:ring-2 focus:ring-fynlo-teal/40 focus:border-fynlo-teal resize-y leading-relaxed disabled:bg-gray-50"
+                />
+                <p className="text-xs text-fynlo-subtle mt-2 leading-relaxed">
+                  <strong>This applies only to auto-sent invites.</strong> Manual invites from the
+                  applicant page still use their own per-invite editor. <br />
+                  The greeting <em>“Hi [first name],”</em>, the deadline line, and the
+                  “Start the assessment” button are added automatically — don&apos;t include them in
+                  your message. <br />
+                  Use two line breaks to start a new paragraph. Leave the field blank to use
+                  the built-in default text.
+                </p>
+              </div>
             </div>
           </div>
 
